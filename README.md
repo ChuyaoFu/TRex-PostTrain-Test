@@ -89,7 +89,7 @@ HF 下载可断点复用；`SKIP_DOWNLOAD=1` 只适用于全部输入已经完�
 默认保持此前确认的 PPU 训练参数：8 GPUs、每卡 batch 16、累积 1、全局 batch 128、LR 3e-5、warmup 5%、cosine 最小 LR 比例 0.1。
 **训练长度保持官方后训练脚本的 100 epochs，`MAX_TRAIN_STEPS=0`。**当前数据划分为 train 190 episodes / 199135 frames，val 10 episodes / 9446 frames；当前 loader / Accelerate 配置每 epoch 1556 optimizer updates，总计 155600 updates。
 保留 action + tactile + VQ codes + FLARE 全部分支，image 384×288，action chunk 16。
-训练读取 worker 默认每进程 4；验证固定抽样，每 500 步验证 4 batches/GPU。每 500 步保存，最多保留 2 份 policy；保存峰值需容纳第三份写入。
+训练读取 worker 默认每进程 4；验证固定抽样，每 500 步验证 4 batches/GPU。每 500 步保存，最多保留 2 份 policy；当前实现先删最旧再写新 checkpoint，脚本仍保守要求输出盘至少 28 GiB 空闲。
 
 官方 `scripts/train.sh` 的学习率配置是 LR=1e-4、warmup=0、min_lr_ratio=0、max_val_batches=30；若训练方要完全采用这几个官方值：
 
