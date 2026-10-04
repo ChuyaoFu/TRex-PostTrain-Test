@@ -36,7 +36,7 @@ DATA_FORMAT="${DATA_FORMAT:-json}"
 # Per-node local cache avoids millions of files and capacity pressure on CPFS.
 IMAGE_ROOT="${IMAGE_ROOT:-/tmp/trex_tong_transfer_json_20260820}"
 case "$DATA_FORMAT" in
-    json) data_args=(--data_format json --data_path "$IMAGE_ROOT/task.json" --val_split_by_episode 1) ;;
+    json) data_args=(--data_format json --data_path "$IMAGE_ROOT/task.json" --val_split_by_episode 0) ;;
     lerobot) data_args=(--data_format lerobot --lerobot_root "$LEROBOT_ROOT") ;;
     *) echo 'DATA_FORMAT must be json or lerobot'; exit 2 ;;
 esac
@@ -44,13 +44,15 @@ OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/outputs}"
 LOG_DIR="${LOG_DIR:-$ROOT/logs}"
 TRAIN_BSZ="${TRAIN_BSZ:-16}"
 GRAD_ACCUM="${GRAD_ACCUM:-1}"
-LR="${LR:-3e-5}"
+LR="${LR:-1e-4}"
+WARMUP_RATES="${WARMUP_RATES:-0}"
+MIN_LR_RATIO="${MIN_LR_RATIO:-0}"
 # Official posttrain length: 100 epochs, no maximum-update cap.
 N_EPOCHS="${N_EPOCHS:-100}"
-SAVE_STEPS="${SAVE_STEPS:-500}"
+SAVE_STEPS="${SAVE_STEPS:-0}"
 VAL_FREQ="${VAL_FREQ:-500}"
-MAX_CKPTS="${MAX_CKPTS:-2}"
-MAX_VAL_BATCHES="${MAX_VAL_BATCHES:-4}"
+MAX_CKPTS="${MAX_CKPTS:-10}"
+MAX_VAL_BATCHES="${MAX_VAL_BATCHES:-30}"
 NUM_WORKERS="${NUM_WORKERS:-2}"
 RUN_DIR="$OUTPUT_DIR/$EXPERIMENT_NAME/$RUN_NAME"
 
@@ -77,7 +79,7 @@ cmd=(python -m accelerate.commands.launch
     --n_epochs "$N_EPOCHS" --max_train_steps 0
     --save_freq 50 --save_steps "$SAVE_STEPS" --max_ckpts "$MAX_CKPTS" --skip_checkpoint_save 0
     --action_dim 62 --action_chunk 16 --train_bsz_per_gpu "$TRAIN_BSZ"
-    --learning_rate "$LR" --min_lr_ratio 0.1 --warmup_rates 0.05 --weight_decay 0
+    --learning_rate "$LR" --min_lr_ratio "$MIN_LR_RATIO" --warmup_rates "$WARMUP_RATES" --weight_decay 0
     --gradient_accumulation_steps "$GRAD_ACCUM" --max_grad_norm 1
     --output_dir "$OUTPUT_DIR" --log_dir "$LOG_DIR"
     --experiment_name "$EXPERIMENT_NAME" --run_name "$RUN_NAME"
@@ -87,8 +89,8 @@ cmd=(python -m accelerate.commands.launch
     --use_flare 1 --n_flare_tokens_per_frame 4 --n_flare_steps 8 --flare_loss_weight 0.5
     --flare_frame_stride 4 --flare_layer_index -1 --image_size 384 288
     --val_ratio 0.05 --val_freq "$VAL_FREQ" --max_val_batches "$MAX_VAL_BATCHES"
-    --val_uniform_sample 1 --eval_at_start 1 --eval_seed 1234 --seed 42
-    --num_workers "$NUM_WORKERS" --val_num_workers 0
+    --val_uniform_sample 0 --eval_at_start 0 --eval_at_end 0 --eval_seed -1 --seed 42
+    --num_workers "$NUM_WORKERS" --val_num_workers 2
     "$@")
 print_config() {
     printf 'PPU processes=%s nodes=%s local_devices=%s global_batch=%s\n' \

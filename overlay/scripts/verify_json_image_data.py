@@ -25,6 +25,7 @@ def main():
     p.add_argument('--lerobot_root', type=Path, required=True)
     p.add_argument('--image_root', type=Path, required=True)
     p.add_argument('--processor_path', type=Path, required=True)
+    p.add_argument('--val_split_by_episode', type=int, choices=[0,1], default=0)
     args = p.parse_args()
     torch.set_num_threads(1)
     root = args.image_root.resolve()
@@ -39,7 +40,7 @@ def main():
         lerobot_video_backend='pyav', image_size=[384,288], action_dim=62, action_chunk=16,
         use_flare=1, n_flare_steps=8, flare_frame_stride=4, use_tactile_vec=1,
         use_tactile_deform=1, use_tactile_vqvae=1, use_tactile_code=1,
-        use_robot_state=0, vqvae_window=16, val_split_by_episode=1)
+        use_robot_state=0, vqvae_window=16, val_split_by_episode=args.val_split_by_episode)
     processor = AutoProcessor.from_pretrained(str(args.processor_path))
     logger = SimpleNamespace(print=print)
     video = TRexLeRobotDataset(cfg, processor, logger)
@@ -63,13 +64,18 @@ def main():
             assert torch.equal(x,y), f'Paired tensor mismatch: {key}'
             tensors[key] = {'shape':list(x.shape), 'exact':True}
         else: assert x == y, key
-    # Both paths must retain the established episode split, not silently switch to frame split.
-    video_val = video.create_val_split(0.05,42)
+    # Batch parity precedes splitting: upstream JSON splits frames, LeRobot episodes.
+    total_frames = len(images)
     image_val = images.create_val_split(0.05,42)
-    assert len(video) == len(images) and len(video_val) == len(image_val)
+    if args.val_split_by_episode:
+        video_val = video.create_val_split(0.05,42)
+        assert len(video) == len(images) and len(video_val) == len(image_val)
+    else:
+        assert len(image_val) == max(1, int(total_frames * 0.05))
+        assert len(images) + len(image_val) == total_frames
     report = {'status':'PASS', 'indices':indices, 'tensors':tensors,
               'train_frames':len(images), 'val_frames':len(image_val),
-              'val_split':'episode', 'identity':manifest['identity']}
+              'val_split':'episode' if args.val_split_by_episode else 'frame', 'identity':manifest['identity']}
     (root / 'paired_batch_verification.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps({'status':'PASS', 'paired_tensors':len(tensors), 'train_frames':len(images), 'val_frames':len(image_val)}),flush=True)
 

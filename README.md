@@ -25,7 +25,7 @@ TREX_WORKDIR=/your/local_ssd/T-Rex_h100 bash run_h100.sh train
 
 使用已有驱动，不改动系统 CUDA 12.8。训练环境使用官方 PyTorch 2.6.0 的 cu124 wheel，由环境提供 CUDA 12.4 runtime，兼容目标 580 驱动。
 
-**默认完整训练：每卡 batch 16，全局 batch 128，LR 3e-5，100 epochs，无训练 step 上限。** 10 步 probe 需要显式设置 `MAX_TRAIN_STEPS=10`。
+**默认完整训练：每卡 batch 16，全局 batch 128，LR 1e-4，100 epochs，无训练 step 上限。** 10 步 probe 需要显式设置 `MAX_TRAIN_STEPS=10`。
 
 脚本在前台运行，Ctrl+C 可中断；安装、下载、转换、验证和训练的 stdout/stderr 都写到 `T-Rex_h100/logs/<RUN_NAME>.pipeline.log`。
 训练指标另外记录在 `outputs/tong_transfer_h100/<RUN_NAME>/metrics.jsonl`。
@@ -52,7 +52,7 @@ SKIP_SETUP=1 SKIP_DOWNLOAD=1 RUN_NAME=h100_full bash run_h100.sh train
 3. 检查 8 张 H100、BF16 matmul、训练模块导入。使用 BF16 + ZeRO-2，无 CPU offload。
 4. HF 下载下面的固定 snapshot，并校验两份大权重 SHA256。可以通过正常 `hf auth login` 提供令牌；不得将令牌放进交付包。
 5. CPU 使用官方 Vega-1 FK，把全部 200 episodes / 208581 frames 的关节 58 维转换成 T-Rex EEF 62 维，生成 16 步动作 chunk 和任务 q01/q99 统计；检查 SE(3)、手部动作、触觉值、episode 边界、真实视频解码及 batch。
-6. `utils/export_lerobot_to_json_images.py` 顺序解码每个视频一次，导出官方 JSON loader 使用的无损 PNG＋JSONL＋统计文件。每视频记录完成状态、原子写文件，支持中断重试；完成前训练不启动。真实 release processor 配对验证 17 项张量和 episode 验证划分，动作/触觉/FLARE/归一化完全保留。
+6. `utils/export_lerobot_to_json_images.py` 顺序解码每个视频一次，导出官方 JSON loader 使用的无损 PNG＋JSONL＋统计文件。每视频记录完成状态、原子写文件，支持中断重试；完成前训练不启动。真实 release processor 配对验证 17 项张量，并检查官方 JSON 按帧验证划分，动作/触觉/FLARE/归一化完全保留。
 7. 8 卡训练，冻结 encoder 的 BN 统计，保留 VQ-VAE FP32，MSE 用 FP32；保存实际 `run_config.json`。完成后验证 checkpoint、输出曲线和 summary，并自动做离线 slow/fast 推理 smoke，不连接机器人。
 
 LeRobot 0.4.0 使用 `--no-deps` 安装，仅启用此项目实际使用的 dataset loader / PyAV 路径。
@@ -86,23 +86,20 @@ HF 下载可断点复用；`SKIP_DOWNLOAD=1` 只适用于全部输入已经完�
 
 ## 默认训练参数及可覆盖项
 
-默认保持此前确认的 PPU 训练参数：8 GPUs、每卡 batch 16、累积 1、全局 batch 128、LR 3e-5、warmup 5%、cosine 最小 LR 比例 0.1。
-**训练长度保持官方后训练脚本的 100 epochs，`MAX_TRAIN_STEPS=0`。**当前数据划分为 train 190 episodes / 199135 frames，val 10 episodes / 9446 frames；当前 loader / Accelerate 配置每 epoch 1556 optimizer updates，总计 155600 updates。
-保留 action + tactile + VQ codes + FLARE 全部分支，image 384×288，action chunk 16。
-训练读取 worker 默认每进程 4；验证固定抽样，每 500 步验证 4 batches/GPU。每 500 步保存，最多保留 2 份 policy；当前实现先删最旧再写新 checkpoint，脚本仍保守要求输出盘至少 28 GiB 空闲。
+默认采用官方后训练配方：8 GPUs、每卡 batch 16、累积 1、全局 batch 128；AdamW、LR 1e-4、warmup 0、cosine 最小 LR 比例 0、weight decay 0。
+训练长度为100 epochs，MAX_TRAIN_STEPS=0，无更新数上限。默认 JSON 路径按帧随机划分5%验证集，seed42：198152 train frames / 10429 val frames，每epoch1549次更新，100epochs共154900次更新。更换batch或数据后自动重新计算。
 
-官方 `scripts/train.sh` 的学习率配置是 LR=1e-4、warmup=0、min_lr_ratio=0、max_val_batches=30；若训练方要完全采用这几个官方值：
+每500步验证，顺序读取验证集，每卡最多30 batches，val workers2；不做均匀子集抽样、不固定每次验证噪声、不额外做训练前或结束后的验证。LeRobot可选路径沿用官方按episode划分，因此仍为190/10 episodes、199135/9446 frames，155600次更新。
 
-```bash
-LR=1e-4 WARMUP_RATES=0 MIN_LR_RATIO=0 MAX_VAL_BATCHES=30 \
-  TREX_WORKDIR=/your/local_ssd/T-Rex_h100 bash run_h100.sh train
-```
+保存采用官方 save_freq=50：每50 epochs及训练结束时保存；SAVE_STEPS=0关闭按步保存，MAX_CKPTS=10与官方默认一致。100epochs正常结束会保存第50和100epoch的两份checkpoint，目录epoch编号从0开始，因此是checkpoint-49-*和checkpoint-99-*。
 
-`TRAIN_BSZ`、`GRAD_ACCUM`、`NUM_WORKERS`、`SAVE_STEPS`、`VAL_FREQ`、`MAX_CKPTS`、`MASTER_PORT`、`RUN_NAME` 均可通过环境变量设置。
-`RAW_ROOT`、`LEROBOT_ROOT`、`WEIGHTS_ROOT`、`OUTPUT_DIR`、`LOG_DIR`、`TRAIN_VENV`、`DATA_VENV` 支持指定绝对路径。
-`DATA_FORMAT=json` 为默认；`DATA_FORMAT=lerobot` 保留旧视频训练路径。`IMAGE_ROOT` 默认工作目录下 `training_data/tong_transfer_json`；`IMAGE_WORKERS=4`，新提取至少需要 `MIN_IMAGE_FREE_GIB=140` GiB 空闲。JSON 默认显式使用 `--val_split_by_episode 1`，保持现有 190/10 episodes 划分。LR schedule 已按 Accelerate 实际 padding 后的更新数计算，100 epochs 对应 155600 updates。
-同一个已有 metrics 的 RUN_NAME 会被拒绝，避免混淆不同训练。
-改变 batch 或数据划分后，update 数会改变；不应通过写死 155600 替代官方 100 epochs。
+保留action、tactile、在线VQ-VAE和FLARE分支；image384×288、action chunk16。训练workers每进程4。保留冻结encoder eval、VQ-VAE FP32、MSE FP32及scheduler长度修正。
+
+可用环境变量覆盖 LR、WARMUP_RATES、MIN_LR_RATIO、TRAIN_BSZ、GRAD_ACCUM、NUM_WORKERS、SAVE_STEPS、VAL_FREQ、MAX_VAL_BATCHES、MAX_CKPTS、N_EPOCHS、MAX_TRAIN_STEPS、MASTER_PORT、RUN_NAME。覆盖后即为自定义配方。
+
+RAW_ROOT、LEROBOT_ROOT、WEIGHTS_ROOT、OUTPUT_DIR、LOG_DIR、TRAIN_VENV、DATA_VENV支持绝对路径。DATA_FORMAT=json为默认；DATA_FORMAT=lerobot保留视频路径。IMAGE_ROOT默认工作目录下training_data/tong_transfer_json，IMAGE_WORKERS=4；新提取至少要求140GiB空闲。训练器和预处理验证器默认均采用JSON按帧划分；图片/动作张量对照在划分前完成。
+
+已有metrics的RUN_NAME会被拒绝，避免混合不同运行。输出盘预检仍至少要求28GiB空闲；若延长训练并保留更多checkpoint，需要相应增加容量。
 
 ## 为什么默认离线图片
 

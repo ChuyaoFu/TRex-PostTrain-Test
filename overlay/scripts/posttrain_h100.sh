@@ -12,7 +12,7 @@ LEROBOT_ROOT="${LEROBOT_ROOT:-$ROOT/training_data/tong_transfer_eef62}"
 DATA_FORMAT="${DATA_FORMAT:-json}"
 IMAGE_ROOT="${IMAGE_ROOT:-$ROOT/training_data/tong_transfer_json}"
 case "$DATA_FORMAT" in
-    json) data_args=(--data_format json --data_path "$IMAGE_ROOT/task.json" --val_split_by_episode 1) ;;
+    json) data_args=(--data_format json --data_path "$IMAGE_ROOT/task.json" --val_split_by_episode 0) ;;
     lerobot) data_args=(--data_format lerobot --lerobot_root "$LEROBOT_ROOT") ;;
     *) echo 'DATA_FORMAT must be json or lerobot'; exit 2 ;;
 esac
@@ -23,15 +23,15 @@ RUN_NAME="${RUN_NAME:-tong_transfer_h100_$(date +%Y%m%d_%H%M%S)}"
 EXPERIMENT_NAME=tong_transfer_h100
 TRAIN_BSZ="${TRAIN_BSZ:-16}"
 GRAD_ACCUM="${GRAD_ACCUM:-1}"
-LR="${LR:-3e-5}"
-WARMUP_RATES="${WARMUP_RATES:-0.05}"
-MIN_LR_RATIO="${MIN_LR_RATIO:-0.1}"
+LR="${LR:-1e-4}"
+WARMUP_RATES="${WARMUP_RATES:-0}"
+MIN_LR_RATIO="${MIN_LR_RATIO:-0}"
 N_EPOCHS="${N_EPOCHS:-100}"
 MAX_TRAIN_STEPS="${MAX_TRAIN_STEPS:-0}"
-SAVE_STEPS="${SAVE_STEPS:-500}"
+SAVE_STEPS="${SAVE_STEPS:-0}"
 VAL_FREQ="${VAL_FREQ:-500}"
-MAX_VAL_BATCHES="${MAX_VAL_BATCHES:-4}"
-MAX_CKPTS="${MAX_CKPTS:-2}"
+MAX_VAL_BATCHES="${MAX_VAL_BATCHES:-30}"
+MAX_CKPTS="${MAX_CKPTS:-10}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
 MASTER_PORT="${MASTER_PORT:-29521}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
@@ -66,8 +66,8 @@ cmd=("$TRAIN_VENV/bin/python" -m accelerate.commands.launch
     --use_flare 1 --n_flare_tokens_per_frame 4 --n_flare_steps 8 --flare_loss_weight 0.5
     --flare_frame_stride 4 --flare_layer_index -1 --image_size 384 288
     --val_ratio 0.05 --val_freq "$VAL_FREQ" --max_val_batches "$MAX_VAL_BATCHES"
-    --val_uniform_sample 1 --eval_at_start 1 --eval_seed 1234 --seed 42
-    --num_workers "$NUM_WORKERS" --val_num_workers 0 "$@")
+    --val_uniform_sample 0 --eval_at_start 0 --eval_at_end 0 --eval_seed -1 --seed 42
+    --num_workers "$NUM_WORKERS" --val_num_workers 2 "$@")
 
 if [[ "$MODE" == dry-run ]]; then
     printf '8 GPUs; per GPU batch=%s; global batch=%s; epochs=%s; step cap=%s\n' "$TRAIN_BSZ" "$((8 * TRAIN_BSZ * GRAD_ACCUM))" "$N_EPOCHS" "$MAX_TRAIN_STEPS"

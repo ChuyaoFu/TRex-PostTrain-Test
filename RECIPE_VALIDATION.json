@@ -1,0 +1,57 @@
+{
+  "launchers": [
+    {
+      "entry": "scripts/posttrain_ppu_8gpu.sh",
+      "parameters": "PASS"
+    },
+    {
+      "entry": "scripts/posttrain_h100.sh",
+      "parameters": "PASS"
+    },
+    {
+      "entry": "handoff/TRex-PostTrain-Test/overlay/scripts/posttrain_ppu_8gpu.sh",
+      "parameters": "PASS"
+    },
+    {
+      "entry": "handoff/TRex-PostTrain-Test/overlay/scripts/posttrain_h100.sh",
+      "parameters": "PASS"
+    }
+  ],
+  "expected_defaults": {
+    "learning_rate": 0.0001,
+    "warmup_rates": 0,
+    "min_lr_ratio": 0,
+    "val_split_by_episode": 0,
+    "val_ratio": 0.05,
+    "val_freq": 500,
+    "max_val_batches": 30,
+    "val_uniform_sample": 0,
+    "eval_at_start": 0,
+    "eval_at_end": 0,
+    "eval_seed": -1,
+    "val_num_workers": 2,
+    "save_freq": 50,
+    "save_steps": 0,
+    "max_ckpts": 10
+  },
+  "save_schedule": [
+    [
+      49,
+      77450
+    ],
+    [
+      99,
+      154900
+    ]
+  ],
+  "fresh_validation_branch": "PASS",
+  "python_syntax": "PASS",
+  "full_training_run": false,
+  "actual_frame_split": {
+    "status": "PASS",
+    "train_frames": 198152,
+    "validation_frames": 10429,
+    "disjoint": true,
+    "planned_updates": 154900
+  }
+}

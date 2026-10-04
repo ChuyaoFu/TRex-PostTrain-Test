@@ -1011,17 +1011,22 @@ def train(args):
                 'batches_per_epoch_per_rank':len(dataloader), 'data_format':args.data_format,
                 'validation_split':'episode' if args.data_format == 'lerobot' or args.val_split_by_episode else 'frame'})
     def evaluate(step):
-        import random
-        py_state, np_state = random.getstate(), np.random.get_state()
-        # num_workers=0 replays collator noise exactly; workers use seeded generators.
-        generator = getattr(val_dataloader, 'generator', None)
-        if generator is not None:
-            generator.manual_seed(args.eval_seed)
-        with torch.random.fork_rng(devices=[accelerator.device.index]):
-            set_seed(args.eval_seed + accelerator.process_index)
+        if args.eval_seed < 0:
+            # Upstream validation consumes fresh noise from the current RNG state.
             result = run_validation(model, val_dataloader, accelerator, args,
                                     is_stage1, use_flare, K, T_per_frame, flare_layer_idx)
-        random.setstate(py_state); np.random.set_state(np_state)
+        else:
+            import random
+            py_state, np_state = random.getstate(), np.random.get_state()
+            # num_workers=0 replays collator noise exactly; workers use seeded generators.
+            generator = getattr(val_dataloader, 'generator', None)
+            if generator is not None:
+                generator.manual_seed(args.eval_seed)
+            with torch.random.fork_rng(devices=[accelerator.device.index]):
+                set_seed(args.eval_seed + accelerator.process_index)
+                result = run_validation(model, val_dataloader, accelerator, args,
+                                        is_stage1, use_flare, K, T_per_frame, flare_layer_idx)
+            random.setstate(py_state); np.random.set_state(np_state)
         record({'kind': 'validation', 'optimizer_step': step, **result})
         accelerator.print(f'[Validation {step}] {result}')
         if accelerator.is_main_process:
@@ -1329,7 +1334,7 @@ def train(args):
                 save_checkpoint(model, processor, accelerator, args, epoch, optimizer_steps, dataset.stats_data)
         if reached_limit:
             break
-    if val_dataloader is not None and (not args.val_freq or optimizer_steps % args.val_freq):
+    if args.eval_at_end and val_dataloader is not None and (not args.val_freq or optimizer_steps % args.val_freq):
         evaluate(optimizer_steps)
     record({'kind': 'complete', 'optimizer_steps': optimizer_steps})
     accelerator.wait_for_everyone()
@@ -1353,8 +1358,9 @@ if __name__ == "__main__":
     parser.add_argument('--skip_checkpoint_save', type=int, default=0, help='Skip weight export for memory/throughput probes.')
     parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--val_num_workers', type=int, default=2)
-    parser.add_argument('--eval_seed', type=int, default=1234)
+    parser.add_argument('--eval_seed', type=int, default=-1, help='Negative: upstream fresh validation noise; nonnegative: reproducible probe.')
     parser.add_argument('--eval_at_start', type=int, default=0)
+    parser.add_argument('--eval_at_end', type=int, default=0, help='Extra final validation; official launchers disable this.')
     parser.add_argument('--val_uniform_sample', type=int, default=0)
     parser.add_argument("--data_path", type=str, default="")
     parser.add_argument("--data_root", type=str, default="")

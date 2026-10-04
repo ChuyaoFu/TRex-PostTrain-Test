@@ -13,10 +13,10 @@
 | 触觉/VQ-VAE | F6 `[10,6]`、10 路 deform、16-frame raw history；release 内嵌 VQ，默认在线编码 | 保留全部分支，不要求 rawtac，也不另行下载 VQ/deform checkpoint；不做 legacy code pre-baking。 |
 | Cascade/FLARE | stage2，10/6 split，dropout 0.1；8未来帧×4 tokens，stride4，loss weight0.5 | 参数保留；完整 20-step 配对训练，包含全部 loss 分支。模型源文件保持官方原样。 |
 | Encoder 冻结/精度 | frozen ViT/deform/VQ；README 声称 VQ 编码等价 | 补 `.eval()` 避免冻结 BN 仍更新统计；VQ 保留原始 FP32，MSE 用 FP32。120-step checkpoint 参数与冻结权重验证通过。 |
-| 验证划分 | 原 JSON 源码按帧；LeRobot 源码按 episode | 明确保留当前任务 episode 划分；JSON 新增 `--val_split_by_episode 1`，190/10 episodes，199135/9446 frames。原默认帧划分仍可用，未悄悄换验证集。 |
-| 长度/批量 | train.sh 100 epochs、8卡×16、accum1 | 相同；无 step cap，155600 updates。原 scheduler 在 sharding 前整除会得到155575，本包按实际 loader 长度修正为155600。 |
-| 优化器/LR | AdamW、1e-4、warmup0、minratio0、weightdecay0 | AdamW/weightdecay同；保留此前确认的3e-5、warmup5%、minratio0.1，README 提供官方这些数值的覆盖命令。属于明确任务配方差异。 |
-| 验证/保存 | 官方 val500、最多30 batches，save每50epochs；离线W&B | 仍val500，但当前约定4 batches/GPU、固定抽样和初始验证；save每500updates、留2份。显式差异；JSONL/run_config额外记录，不改变模型分支。 |
+| 验证划分 | 原JSON按帧；LeRobot按episode | 已对齐：默认JSON val_split_by_episode=0，198152/10429 frames；LeRobot保留episode划分。 |
+| 长度/批量 | 100epochs、8卡×16、accum1 | 相同；默认JSON为154900 updates，LeRobot为155600；保留按实际loader长度修正scheduler。 |
+| 优化器/LR | AdamW、1e-4、warmup0、minratio0、weightdecay0 | 当前PPU/H100默认全部对齐；旧benchmark使用3e-5，仅为历史记录。 |
+| 验证/保存 | val500、最多30batches、每50epochs保存，结束保存 | 已对齐；不固定验证噪声、不均匀抽样、不额外初始/最终验证；save_steps=0、max_ckpts=10。 |
 | 原有加速 | BF16、ZeRO2、SDPA、partial-flow KV复用、冻结模块no_grad | 均保留；官方原来就没有启用compile、gradient checkpointing或通信overlap。PPU实际SDPA是否走厂商fused kernel未测，不把API名当成证据。 |
 | Checkpoint 交付 | model、config、processor、training_args、task stats | 全部导出并独立 reload。增加数据格式/图像尺寸/划分记录、严格模型校验。 |
 | 精确断点状态 | README列state/和training_state.json，但固定源码save_checkpoint没save_state/load_state | 本包同样不支持 optimizer/scheduler/RNG 精确续训；README明确限制。这是上游文档/源码不符，不能当作已复现。已有checkpoint是policy权重，不是完整训练状态。 |
