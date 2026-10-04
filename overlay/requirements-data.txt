@@ -1,0 +1,10 @@
+# CPU-only preprocessing environment, independent of the PPU/H100 train env.
+pin==4.0.0
+numpy==2.2.6; python_version < "3.12"
+numpy==2.5.3; python_version >= "3.12"
+pyarrow==20.0.0
+av==15.1.0
+opencv-python-headless==4.13.0.92
+ruff>=0.6
+hatchling>=1.27
+editables==0.5

@@ -1,0 +1,16 @@
+# Generated upstream checkout and large training inputs/outputs
+/T-Rex_h100/
+.venvs/
+.cache/
+.tools/
+weights/
+training_data/
+data/
+outputs/
+logs/
+wandb/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*

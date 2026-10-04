@@ -1,0 +1,25 @@
+{
+  "source_repository": "https://github.com/ZhuoyangLiu2005/T-Rex.git",
+  "source_revision": "f88e10c61da123c68bf0927cf4860bc97a0381f3",
+  "raw_dataset": {
+    "repo": "miniFranka/trex_gateway_tong_transfer_sf_norawtac_20260820",
+    "revision": "9e20b13d042c708e1546138adda25c13ee6aa4e7",
+    "info_sha256": "e028f38c55350b9bdfd2b313b0f98863b269317fe6dad48b06c0202bd1b22bb9"
+  },
+  "recipe": {
+    "gpus": 8,
+    "per_gpu_batch": 16,
+    "gradient_accumulation": 1,
+    "global_batch": 128,
+    "epochs": 100,
+    "max_train_steps": 0,
+    "lr": 3e-05,
+    "warmup_rate": 0.05,
+    "min_lr_ratio": 0.1,
+    "validation_ratio": 0.05,
+    "expected_updates": 155600,
+    "precision": "BF16 except frozen VQ-VAE and MSE FP32",
+    "zero_stage": 2
+  },
+  "h100_execution_verified": false
+}
