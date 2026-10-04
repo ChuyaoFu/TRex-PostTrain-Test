@@ -1,5 +1,7 @@
 # 官方 README 后训练流程审查（2026-10-04）
 
+最新GitHub复核、修复和Python3.10/全量数据证据见 [AUDIT_20261004.md](AUDIT_20261004.md)。
+
 依据固定版本 [`f88e10c61da123c68bf0927cf4860bc97a0381f3`](https://github.com/ZhuoyangLiu2005/T-Rex/tree/f88e10c61da123c68bf0927cf4860bc97a0381f3) 的 README、train.sh/train.py、test.sh/test.py、JSON/LeRobot converter 和模型代码。以下区分官方文档、实际源码、已复现范围；不能宣称 H100 或实机部署已全部验证。
 
 | 项目 | 官方要求/实际行为 | 本任务状态与证据 |

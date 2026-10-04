@@ -47,7 +47,11 @@
     "png_files": 2711553,
     "min_free_gib": 140,
     "source": "canonical EEF62 LeRobot, unchanged task normalization",
-    "ppu_default": "/tmp/trex_tong_transfer_json_20260820"
+    "ppu_default": "/tmp/trex_tong_transfer_json_20260820",
+    "actual_png_bytes": 109784727688,
+    "actual_json_bytes": 5016130577,
+    "full_export_verified": true,
+    "expected_png_inventory_verified": true
   },
   "monitoring": {
     "default_mode": "online",
@@ -59,5 +63,6 @@
     "preflight": true,
     "run_metadata_file": "wandb_run.json",
     "metric_step": "optimizer_step"
-  }
+  },
+  "latest_audit": "AUDIT_20261004.md"
 }

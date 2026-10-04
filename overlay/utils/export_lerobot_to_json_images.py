@@ -36,6 +36,28 @@ def atomic_json(path, value):
 def suffix(key): return key.removeprefix('observation.images.') if key in RGB else key.rsplit('.', 1)[-1]
 def image_path(out, episode, frame, key): return out / 'images' / f'episode_{episode}' / f'image{frame}_{suffix(key)}.png'
 
+def validate_image_inventory(out, episodes):
+    """Reject an incomplete cache before a multi-hour training run starts."""
+    for ep in episodes:
+        folder = out / 'images' / f"episode_{ep['episode_index']}"
+        expected = {f'image{i}_{suffix(key)}.png' for i in range(ep['length']) for key in VIEWS}
+        if not folder.is_dir():
+            raise RuntimeError(f'Missing image directory: {folder}')
+        with os.scandir(folder) as entries:
+            for entry in entries:
+                if entry.name in expected and entry.is_file() and entry.stat().st_size > 0:
+                    expected.remove(entry.name)
+        if expected:
+            raise RuntimeError(f'Incomplete image cache: {folder / min(expected)}; '
+                               'restore missing images or choose a new output directory.')
+
+def remaining_free_gib(out, requested):
+    # A retry already owns some of the PNG allocation. Do not demand the full
+    # fresh-export allowance again; reserve at least 8 GiB for JSON and scratch.
+    completed = sum(json.loads(p.read_text()).get('png_bytes', 0)
+                    for p in (out / 'jobs').glob('*.json'))
+    return max(min(8.0, requested), requested - completed / 2**30)
+
 def export(source, out, workers, min_free_gib):
     source, out = source.resolve(), out.resolve()
     if (source / 'CONVERSION_IN_PROGRESS').exists(): raise RuntimeError('EEF conversion is incomplete.')
@@ -64,6 +86,7 @@ def export(source, out, workers, min_free_gib):
             if old['identity'] != identity: raise RuntimeError('Output belongs to different input data; choose another output directory.')
             assert (out / 'task.json').stat().st_size == old['json_bytes']
             assert sha(out / 'task_statistics.json') == identity['statistics_sha256']
+            validate_image_inventory(out, eps)
             progress.unlink(missing_ok=True)
             emit(stage='reuse_completed_export', **{k: old[k] for k in ('frames', 'episodes', 'png_count', 'png_bytes')})
             return old
@@ -72,7 +95,8 @@ def export(source, out, workers, min_free_gib):
             raise RuntimeError('Partial output belongs to different inputs; choose a fresh directory.')
         atomic_json(identity_path, identity)
         free = shutil.disk_usage(out).free / 2**30
-        if free < min_free_gib: raise RuntimeError(f'Image output has {free:.1f} GiB free; require {min_free_gib:g} GiB.')
+        required = remaining_free_gib(out, min_free_gib)
+        if free < required: raise RuntimeError(f'Image output has {free:.1f} GiB free; require {required:.1f} GiB for remaining export.')
         progress.write_text(f'pid={os.getpid()}\nstarted={time.time()}\n')
         (out / 'jobs').mkdir(exist_ok=True)
         jobs = {}
@@ -155,6 +179,7 @@ def export(source, out, workers, min_free_gib):
                         frames += 1
         assert frames == info['total_frames']
         assert sum(r['png_count'] for r in results) == frames * len(VIEWS)
+        validate_image_inventory(out, eps)
         os.replace(json_tmp, out / 'task.json')
         shutil.copyfile(source / 'meta/trex_norm_stats.json', out / 'task_statistics.json.tmp')
         os.replace(out / 'task_statistics.json.tmp', out / 'task_statistics.json')

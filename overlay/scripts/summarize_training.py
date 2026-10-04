@@ -4,7 +4,12 @@ import argparse, json, math, pathlib, statistics
 p=argparse.ArgumentParser(); p.add_argument('run_dir',type=pathlib.Path); p.add_argument('--window',type=int,default=20); a=p.parse_args()
 rows=[json.loads(line) for line in (a.run_dir/'metrics.jsonl').read_text().splitlines() if line.strip()]
 train=[r for r in rows if r['kind']=='train']; val=[r for r in rows if r['kind']=='validation']
-report={'optimizer_steps':train[-1]['optimizer_step'] if train else 0,'completed':any(r['kind']=='complete' for r in rows),'train':{},'validation':val,'checkpoints':[str(x) for x in a.run_dir.glob('checkpoint-*/model.pt')]}
+config_path=a.run_dir/'run_config.json'
+config=json.loads(config_path.read_text()) if config_path.exists() else {}
+arguments=config.get('arguments',{})
+split=('episode' if arguments.get('data_format')=='lerobot' or arguments.get('val_split_by_episode') else 'frame') if arguments else 'unknown'
+noise=('fixed' if arguments.get('eval_seed',-1)>=0 else 'fresh') if arguments else 'unknown'
+report={'optimizer_steps':train[-1]['optimizer_step'] if train else 0,'completed':any(r['kind']=='complete' for r in rows),'train':{},'validation':val,'validation_split':split,'validation_noise':noise,'checkpoints':[str(x) for x in a.run_dir.glob('checkpoint-*/model.pt')]}
 for key in ('total_loss','action_loss','tactile_loss','flare_loss'):
     values=[r[key] for r in train]
     if not values: continue
@@ -28,6 +33,6 @@ for key,label in [('total_loss','Total'),('action_loss','Action'),('tactile_loss
     axes[0].plot(xs,ys,alpha=.12,color=line.get_color())
 for key in ('val/action_loss','val/tactile_loss'):
     if val and key in val[0]: axes[1].plot([r['optimizer_step'] for r in val],[r[key] for r in val],'-o',label=key.removeprefix('val/'))
-axes[0].set_title(f'Train loss ({a.window}-step rolling mean)'); axes[1].set_title('Held-out episodes, fixed samples and noise')
+axes[0].set_title(f'Train loss ({a.window}-step rolling mean)'); axes[1].set_title(f'Validation: {split} split, {noise} noise')
 for ax in axes: ax.set_xlabel('Optimizer update'); ax.set_ylabel('Loss'); ax.grid(alpha=.2); ax.legend()
 fig.tight_layout(); fig.savefig(a.run_dir/'loss_curve.png',dpi=160)

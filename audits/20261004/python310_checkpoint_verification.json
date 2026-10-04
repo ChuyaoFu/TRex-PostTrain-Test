@@ -1,0 +1,32 @@
+{
+  "matching_tensor_keys_and_shapes": 1412,
+  "all_tensors_finite": true,
+  "unchanged_frozen_tensors": 454,
+  "updated_parameters": {
+    "flare_queries": {
+      "changed_elements": 45553,
+      "total_elements": 65536,
+      "mean_abs_change": 0.0001768924412317574,
+      "max_abs_change": 0.00103759765625
+    },
+    "model.layers.0.self_attn.q_proj.weight": {
+      "changed_elements": 2872292,
+      "total_elements": 4194304,
+      "mean_abs_change": 0.00014815856411587447,
+      "max_abs_change": 0.001007080078125
+    },
+    "model.layers.0.self_attn.q_proj_action.weight": {
+      "changed_elements": 3017536,
+      "total_elements": 4194304,
+      "mean_abs_change": 0.00015616099699400365,
+      "max_abs_change": 0.0013427734375
+    },
+    "model.layers.0.self_attn.q_proj_tactile.weight": {
+      "changed_elements": 3296010,
+      "total_elements": 4194304,
+      "mean_abs_change": 0.00016971882723737508,
+      "max_abs_change": 0.001220703125
+    }
+  },
+  "model_bytes": 8505208990
+}

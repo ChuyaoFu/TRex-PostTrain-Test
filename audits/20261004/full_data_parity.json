@@ -1,0 +1,386 @@
+{
+  "status": "PASS",
+  "indices": [
+    0,
+    1,
+    668,
+    1336,
+    1337,
+    2090,
+    2843,
+    207844,
+    208212,
+    208580
+  ],
+  "tensors": {
+    "input_ids": {
+      "shape": [
+        10,
+        421
+      ],
+      "exact": true
+    },
+    "attention_mask": {
+      "shape": [
+        10,
+        421
+      ],
+      "exact": true
+    },
+    "pixel_values": {
+      "shape": [
+        12960,
+        1536
+      ],
+      "exact": true
+    },
+    "image_grid_thw": {
+      "shape": [
+        30,
+        3
+      ],
+      "exact": true
+    },
+    "noisy_actions": {
+      "shape": [
+        10,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "target": {
+      "shape": [
+        10,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "timesteps": {
+      "shape": [
+        10
+      ],
+      "exact": true
+    },
+    "norm_actions": {
+      "shape": [
+        10,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "tactile_f6s": {
+      "shape": [
+        10,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "tactile_deforms": {
+      "shape": [
+        10,
+        10,
+        1,
+        240,
+        240
+      ],
+      "exact": true
+    },
+    "tactile_f6s_delayed": {
+      "shape": [
+        10,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "tactile_deforms_delayed": {
+      "shape": [
+        10,
+        10,
+        1,
+        240,
+        240
+      ],
+      "exact": true
+    },
+    "tactile_f6_history": {
+      "shape": [
+        10,
+        16,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "time_r": {
+      "shape": [
+        10
+      ],
+      "exact": true
+    },
+    "eps_r": {
+      "shape": [
+        10,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "flare_pixel_values": {
+      "shape": [
+        34560,
+        1536
+      ],
+      "exact": true
+    },
+    "flare_grid_thw": {
+      "shape": [
+        80,
+        3
+      ],
+      "exact": true
+    }
+  },
+  "train_frames": 198152,
+  "val_frames": 10429,
+  "val_split": "frame",
+  "identity": {
+    "version": 1,
+    "source": "/mnt/world_foundational_model/chuyao/T-Rex/training_data/tong_transfer_eef62",
+    "info_sha256": "3250bc8ee45543e8ef3a6d786cec7eb0aeacc4d7c9925dd05e2023738705dd91",
+    "statistics_sha256": "1a5752575ff20eabae7ab67127c47c75bcf21fb36343ca70d63a0d43345dd4b4",
+    "parquet_sha256": {
+      "data/chunk-000/file-000.parquet": "eae6994447af384de945082bcf67221636a08c9425670e107c9c83ef620acef8",
+      "data/chunk-000/file-001.parquet": "47278eae2b8f4211dc422046a6b4d5727cfc2a0c58330cd7dfa82bb39ef514ce"
+    },
+    "video_metadata": {
+      "videos/observation.images.head/chunk-000/file-000.mp4": [
+        184925871,
+        1791093475432502555
+      ],
+      "videos/observation.images.head/chunk-000/file-001.mp4": [
+        173537848,
+        1791093499413275801
+      ],
+      "videos/observation.images.head/chunk-000/file-002.mp4": [
+        169110275,
+        1791093532525385419
+      ],
+      "videos/observation.images.head/chunk-000/file-003.mp4": [
+        176447400,
+        1791093472180266920
+      ],
+      "videos/observation.images.head/chunk-000/file-004.mp4": [
+        197292879,
+        1791093483400133129
+      ],
+      "videos/observation.images.head/chunk-000/file-005.mp4": [
+        178269221,
+        1791093427611201055
+      ],
+      "videos/observation.images.head/chunk-000/file-006.mp4": [
+        179687304,
+        1791093506838963036
+      ],
+      "videos/observation.images.head/chunk-000/file-007.mp4": [
+        172061345,
+        1791093433601752782
+      ],
+      "videos/observation.images.head/chunk-000/file-008.mp4": [
+        178788737,
+        1791093440093065262
+      ],
+      "videos/observation.images.head/chunk-000/file-009.mp4": [
+        180165414,
+        1791093449397010881
+      ],
+      "videos/observation.images.head/chunk-000/file-010.mp4": [
+        187661503,
+        1791093452736920056
+      ],
+      "videos/observation.images.head/chunk-000/file-011.mp4": [
+        207694754,
+        1791093467160878405
+      ],
+      "videos/observation.images.head/chunk-000/file-012.mp4": [
+        15765316,
+        1791093454579979838
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-000.mp4": [
+        189563474,
+        1791093467649405216
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-001.mp4": [
+        175033501,
+        1791093482418225441
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-002.mp4": [
+        165765721,
+        1791093478936483264
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-003.mp4": [
+        166724927,
+        1791093521958131035
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-004.mp4": [
+        201611290,
+        1791093557223460430
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-005.mp4": [
+        170883593,
+        1791093490490929148
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-006.mp4": [
+        179735472,
+        1791093498985827198
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-007.mp4": [
+        167708228,
+        1791093544983638664
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-008.mp4": [
+        174026380,
+        1791093502898839102
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-009.mp4": [
+        209004543,
+        1791093516854408801
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-010.mp4": [
+        180924654,
+        1791093586743995746
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-011.mp4": [
+        187856600,
+        1791093515518268716
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-012.mp4": [
+        99532272,
+        1791093562684431236
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-000.mp4": [
+        189458762,
+        1791093528756878673
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-001.mp4": [
+        170068683,
+        1791093532221239968
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-002.mp4": [
+        198610638,
+        1791093585686863846
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-003.mp4": [
+        166221983,
+        1791093540035688022
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-004.mp4": [
+        160180336,
+        1791093546667124798
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-005.mp4": [
+        202340155,
+        1791093592384700080
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-006.mp4": [
+        162270494,
+        1791093551369328754
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-007.mp4": [
+        173610194,
+        1791093602579851018
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-008.mp4": [
+        206062283,
+        1791093564300087302
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-009.mp4": [
+        171715868,
+        1791093563371912378
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-010.mp4": [
+        180356926,
+        1791093621770231602
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-011.mp4": [
+        190052650,
+        1791093662555810004
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-012.mp4": [
+        197316942,
+        1791093577079451050
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-013.mp4": [
+        177078394,
+        1791093579612161070
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-014.mp4": [
+        168810213,
+        1791093588855496479
+      ],
+      "videos/observation.tactile_deform.l0/chunk-000/file-000.mp4": [
+        7911944,
+        1791093586352942072
+      ],
+      "videos/observation.tactile_deform.l1/chunk-000/file-000.mp4": [
+        7911944,
+        1791093580978782835
+      ],
+      "videos/observation.tactile_deform.l2/chunk-000/file-000.mp4": [
+        7911944,
+        1791093582410983851
+      ],
+      "videos/observation.tactile_deform.l3/chunk-000/file-000.mp4": [
+        8040961,
+        1791093585103626613
+      ],
+      "videos/observation.tactile_deform.l4/chunk-000/file-000.mp4": [
+        7911944,
+        1791093583631750769
+      ],
+      "videos/observation.tactile_deform.r0/chunk-000/file-000.mp4": [
+        192717274,
+        1791093658285175309
+      ],
+      "videos/observation.tactile_deform.r0/chunk-000/file-001.mp4": [
+        80974188,
+        1791093598650424682
+      ],
+      "videos/observation.tactile_deform.r1/chunk-000/file-000.mp4": [
+        193034875,
+        1791093644969870324
+      ],
+      "videos/observation.tactile_deform.r1/chunk-000/file-001.mp4": [
+        40135858,
+        1791093590445681849
+      ],
+      "videos/observation.tactile_deform.r2/chunk-000/file-000.mp4": [
+        195544467,
+        1791093699949886713
+      ],
+      "videos/observation.tactile_deform.r2/chunk-000/file-001.mp4": [
+        42877970,
+        1791093592600649871
+      ],
+      "videos/observation.tactile_deform.r3/chunk-000/file-000.mp4": [
+        7949355,
+        1791093593762087413
+      ],
+      "videos/observation.tactile_deform.r4/chunk-000/file-000.mp4": [
+        8185155,
+        1791093591872826624
+      ]
+    },
+    "crop": [
+      0,
+      300,
+      140,
+      540
+    ],
+    "png_compress_level": 1
+  }
+}

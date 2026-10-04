@@ -21,6 +21,7 @@ python3 overlay/scripts/configure_wandb.py
 ```bash
 git clone git@github.com:ChuyaoFu/TRex-PostTrain-Test.git
 cd TRex-PostTrain-Test
+python3 overlay/scripts/configure_wandb.py
 bash run_h100.sh train
 ```
 
@@ -70,11 +71,11 @@ python scripts/wandb_preflight.py --smoke
 ```bash
 export TREX_WORKDIR=/your/local_ssd/T-Rex_h100
 bash run_h100.sh prepare
-SKIP_SETUP=1 SKIP_DOWNLOAD=1 MAX_TRAIN_STEPS=10 RUN_NAME=h100_probe bash run_h100.sh train
+SKIP_SETUP=1 SKIP_DOWNLOAD=1 MAX_TRAIN_STEPS=10 VAL_FREQ=5 RUN_NAME=h100_probe bash run_h100.sh train
 SKIP_SETUP=1 SKIP_DOWNLOAD=1 RUN_NAME=h100_full bash run_h100.sh train
 ```
 
-10 步只检查链路/显存/导出，不足以证明任务已收敛。正式命令自动恢复 100 epochs，无 step 上限。
+probe 的 VAL_FREQ=5 用于实际执行验证分支；10 步只检查链路/显存/验证/导出，不足以证明任务已收敛。正式命令自动恢复 100 epochs、val500，无 step 上限。
 只查看最终训练命令：`bash run_h100.sh dry-run`；首次仍会下载官方源码。
 源码已准备好时也可直接执行 `bash scripts/posttrain_h100.sh dry-run`。
 
@@ -132,13 +133,15 @@ HF 下载可断点复用；`SKIP_DOWNLOAD=1` 只适用于全部输入已经完�
 
 RAW_ROOT、LEROBOT_ROOT、WEIGHTS_ROOT、OUTPUT_DIR、LOG_DIR、TRAIN_VENV、DATA_VENV支持绝对路径。DATA_FORMAT=json为默认；DATA_FORMAT=lerobot保留视频路径。IMAGE_ROOT默认工作目录下training_data/tong_transfer_json，IMAGE_WORKERS=4；新提取至少要求140GiB空闲。训练器和预处理验证器默认均采用JSON按帧划分；图片/动作张量对照在划分前完成。
 
+重试会扣除已完成视频的PNG容量，不重复要求额外140GiB；复用完成缓存前逐个检查预期PNG存在且非空。已有两套Python环境时，setup默认检查28GiB剩余空间，图片与输出阶段分别继续检查容量。`MIN_FREE_GIB`可显式覆盖setup阈值。
+
 已有metrics的RUN_NAME会被拒绝，避免混合不同运行。输出盘预检仍至少要求28GiB空闲；若延长训练并保留更多checkpoint，需要相应增加容量。
 
 ## 为什么默认离线图片
 
 官方 README 的默认 JSON 路径先离线解视频为 PNG。我们原先选择了官方支持的 LeRobot opt-in 路径；不是官方没有这一步。配对实测见 [`IO_BENCHMARK.md`](IO_BENCHMARK.md)：dev 2 PPU、每卡 bs16、全部 loss 分支开启，原共享盘视频 5.19 s/update，JSON＋本地 PNG 3.62 s/update，训练耗时减少约 30%，吞吐提高约 44%；两组模型计算约 3.6 s，差异主要是等待数据。DataLoader 单独测速快约 5.7 倍，不能把这个倍数直接用于训练 ETA。
 
-这些是 dev 两卡、两条完整 episodes、warm-cache 的结果；8 卡 PPU 和 H100 尚需实测。PNG/JSON 容量按样本外推，提取一次之后可跨全部 100 epochs 复用。
+这些是 dev 两卡、两条完整 episodes、warm-cache 的结果；8 卡 PPU 和 H100 尚需实测。全量导出已完成：2711553张PNG、109784727688字节图片、约5.02GB JSON；提取一次之后可跨全部100epochs复用。
 
 ## 已有 PPU 环境的准备与启动
 
@@ -146,7 +149,7 @@ RAW_ROOT、LEROBOT_ROOT、WEIGHTS_ROOT、OUTPUT_DIR、LOG_DIR、TRAIN_VENV、DAT
 
 ```bash
 cd /mnt/world_foundational_model/chuyao/T-Rex
-# 只做提取与校验，不启动 GPU 训练；dev 上已启动这一流程。
+# 只做提取与校验，不启动 GPU 训练；dev 已完成，可复用缓存。
 PREPARE_ONLY=1 bash scripts/posttrain_ppu_8gpu.sh
 # 图片完成后，8 PPU 正式训练仍以前台运行并正常 tee 日志。
 RUN_NAME=tong_transfer_ppu_images bash scripts/posttrain_ppu_8gpu.sh
@@ -178,6 +181,7 @@ INFERENCE_PYTHON=/path/to/environment/bin/python PORT=5678 bash scripts/serve_po
 
 原始完整数据 + 全量 midtrain 已在 PPU 完成训练、导出和独立 reload 验证；120 步训练均值下降约 54%，固定验证 action / tactile loss 都下降；bs16 已在 PPU 跑通。
 本 H100 包复用这些修复。新增脚本、依赖和 CPU 数据链路的检查结果见 `VALIDATION.md`。
+最新复核见 [`AUDIT_20261004.md`](AUDIT_20261004.md)：包含全量导出/抽样张量对照、全新Python3.10数据链路、启动与缓存修复。官方默认按帧验证可能与训练集共享轨迹，因此验证loss不能代表未见轨迹或实机成功率。
 **尚无 H100 硬件上的实机训练结果**；建议训练方先执行上述 10 步 probe，之后正式 100 epochs。H100 的完成时间应根据目标服务器实际稳定 step time 估算。
 
 兼容性依据：

@@ -90,8 +90,13 @@ mkdir -p "$(dirname "$LOG_FILE")"
     for binary in git curl python3 nvidia-smi; do command -v "$binary" >/dev/null || { echo "Missing $binary"; exit 2; }; done
     nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
     if [[ "${SKIP_SETUP:-0}" != 1 ]]; then
-        # Check an empty setup has room for environments, inputs and save-time peaks.
-        python3 - "$ROOT" "${MIN_FREE_GIB:-200}" <<'PYSPACE'
+        # Required even when uv is already installed on PATH.
+        mkdir -p "$ROOT/.tools"
+        # Reused inputs already occupy their allocation; export/output stages
+        # independently check their remaining capacity before writing.
+        SETUP_FREE_GIB=200
+        if [[ -x "$TRAIN_VENV/bin/python" && -x "$DATA_VENV/bin/python" ]]; then SETUP_FREE_GIB=28; fi
+        python3 - "$ROOT" "${MIN_FREE_GIB:-$SETUP_FREE_GIB}" <<'PYSPACE'
 import shutil, sys
 free = shutil.disk_usage(sys.argv[1]).free / 2**30
 if free < float(sys.argv[2]):

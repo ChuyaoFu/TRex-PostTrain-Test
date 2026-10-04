@@ -1,5 +1,7 @@
 # 交付检查（2026-10-04）
 
+最新完整复核见 [AUDIT_20261004.md](AUDIT_20261004.md)。后续已完成全量图片与JSON导出，并在新Python3.10环境执行数据转换、图片/视频张量对照及CPU checkpoint检查；下文早期记录的环境和配方按历史背景阅读。
+
 已通过：
 
 - 从公开 GitHub fetch 固定 commit 并 checkout，应用 overlay；首次和重复入口 dry-run 均成功。
@@ -21,11 +23,11 @@
 - 使用全任务200个episodes的真实长度和实际SftDataset划分函数，核对199135train/9446val frames和8×16、100epochs的155600updates。
 - 修改后的H100入口dry-run及真实train.py argparse检查通过；PPU dry-run输出默认JSON、episode split、8×16、100epochs、无限step cap。
 - 推理入口严格加载120-step policy：missing0/unexpected0，VQ原始权重精确恢复FP32；离线slow_and_fast→fast→slow→fast返回[16,62]有限动作。不启动socket或机器人。
-- 全量图片提取已在ali-dev本地盘启动（输出`/tmp/trex_tong_transfer_json_20260820`）；此处只声称进程运行和持续产出，未声称全量完成。
+- 早期全量提取记录为进行中；最新复核已完成200episodes/208581frames、2711553张图片和JSON，新增全量文件库存检查通过，详见最新审查报告。
 
 验证边界：
 
-- 上述实际 CPU FK 检查使用现有 Python 3.12 interpreter，并切到 NumPy 2.2.6；Python 3.10 依赖是平台解析检查，没有宣称已在新的完整 Python 3.10 CUDA 环境跑过训练。
+- 早期CPU FK检查使用Python3.12；最新复核已用新Python3.10.18环境重新转换2844帧，17项真实processor张量配对通过。仍没有在完整Python3.10 CUDA/DeepSpeed环境跑过H100训练。
 - H100 / NVIDIA CUDA 运行时、NCCL、DeepSpeed 8 卡启动、实机显存和性能尚未验证，因为当前只有 PPU 硬件。
 - 目标服务器的 prepare / 10-step probe 会检查真实环境导入、8 卡 BF16、数据 batch、模型加载、反向传播和 policy 导出。probe 成功后再执行默认 100 epochs。
 - 下载依赖目标机器的网络访问；HF/uv/Git 下载错误会中止，并可以用原工作目录重试。

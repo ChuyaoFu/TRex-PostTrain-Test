@@ -1,0 +1,218 @@
+{
+  "status": "PASS",
+  "indices": [
+    0,
+    1,
+    668,
+    1336,
+    1337,
+    2090,
+    2843
+  ],
+  "tensors": {
+    "input_ids": {
+      "shape": [
+        7,
+        421
+      ],
+      "exact": true
+    },
+    "attention_mask": {
+      "shape": [
+        7,
+        421
+      ],
+      "exact": true
+    },
+    "pixel_values": {
+      "shape": [
+        9072,
+        1536
+      ],
+      "exact": true
+    },
+    "image_grid_thw": {
+      "shape": [
+        21,
+        3
+      ],
+      "exact": true
+    },
+    "noisy_actions": {
+      "shape": [
+        7,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "target": {
+      "shape": [
+        7,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "timesteps": {
+      "shape": [
+        7
+      ],
+      "exact": true
+    },
+    "norm_actions": {
+      "shape": [
+        7,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "tactile_f6s": {
+      "shape": [
+        7,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "tactile_deforms": {
+      "shape": [
+        7,
+        10,
+        1,
+        240,
+        240
+      ],
+      "exact": true
+    },
+    "tactile_f6s_delayed": {
+      "shape": [
+        7,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "tactile_deforms_delayed": {
+      "shape": [
+        7,
+        10,
+        1,
+        240,
+        240
+      ],
+      "exact": true
+    },
+    "tactile_f6_history": {
+      "shape": [
+        7,
+        16,
+        10,
+        6
+      ],
+      "exact": true
+    },
+    "time_r": {
+      "shape": [
+        7
+      ],
+      "exact": true
+    },
+    "eps_r": {
+      "shape": [
+        7,
+        16,
+        62
+      ],
+      "exact": true
+    },
+    "flare_pixel_values": {
+      "shape": [
+        24192,
+        1536
+      ],
+      "exact": true
+    },
+    "flare_grid_thw": {
+      "shape": [
+        56,
+        3
+      ],
+      "exact": true
+    }
+  },
+  "train_frames": 2702,
+  "val_frames": 142,
+  "val_split": "frame",
+  "identity": {
+    "version": 1,
+    "source": "/tmp/trex-h100-audit-20261004/converted",
+    "info_sha256": "0ddd258a77ce43d4f6f620ba931e7eff8813cc10a2a15c37778deb645303ca82",
+    "statistics_sha256": "a39547f42b23d3e320e75fba2de7595cfe80edfaa791e052a5d744d7ea89b24f",
+    "parquet_sha256": {
+      "data/chunk-000/file-000.parquet": "4a70b10ec9d43a9bf68f0a2c99f79ff97aadbfcf92a0c5a191dbf348492d3256"
+    },
+    "video_metadata": {
+      "videos/observation.images.head/chunk-000/file-000.mp4": [
+        184925871,
+        1791093475432502555
+      ],
+      "videos/observation.images.wrist_left/chunk-000/file-000.mp4": [
+        189563474,
+        1791093467649405216
+      ],
+      "videos/observation.images.wrist_right/chunk-000/file-000.mp4": [
+        189458762,
+        1791093528756878673
+      ],
+      "videos/observation.tactile_deform.l0/chunk-000/file-000.mp4": [
+        7911944,
+        1791093586352942072
+      ],
+      "videos/observation.tactile_deform.l1/chunk-000/file-000.mp4": [
+        7911944,
+        1791093580978782835
+      ],
+      "videos/observation.tactile_deform.l2/chunk-000/file-000.mp4": [
+        7911944,
+        1791093582410983851
+      ],
+      "videos/observation.tactile_deform.l3/chunk-000/file-000.mp4": [
+        8040961,
+        1791093585103626613
+      ],
+      "videos/observation.tactile_deform.l4/chunk-000/file-000.mp4": [
+        7911944,
+        1791093583631750769
+      ],
+      "videos/observation.tactile_deform.r0/chunk-000/file-000.mp4": [
+        192717274,
+        1791093658285175309
+      ],
+      "videos/observation.tactile_deform.r1/chunk-000/file-000.mp4": [
+        193034875,
+        1791093644969870324
+      ],
+      "videos/observation.tactile_deform.r2/chunk-000/file-000.mp4": [
+        195544467,
+        1791093699949886713
+      ],
+      "videos/observation.tactile_deform.r3/chunk-000/file-000.mp4": [
+        7949355,
+        1791093593762087413
+      ],
+      "videos/observation.tactile_deform.r4/chunk-000/file-000.mp4": [
+        8185155,
+        1791093591872826624
+      ]
+    },
+    "crop": [
+      0,
+      300,
+      140,
+      540
+    ],
+    "png_compress_level": 1
+  }
+}
