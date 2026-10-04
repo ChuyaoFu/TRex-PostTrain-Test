@@ -14,3 +14,6 @@ __pycache__/
 .DS_Store
 .env
 .env.*
+# Credentials must never be included in the handoff or Git history.
+wandb_api_key
+*.netrc

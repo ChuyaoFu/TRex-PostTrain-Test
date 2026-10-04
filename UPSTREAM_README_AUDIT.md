@@ -16,7 +16,7 @@
 | 验证划分 | 原JSON按帧；LeRobot按episode | 已对齐：默认JSON val_split_by_episode=0，198152/10429 frames；LeRobot保留episode划分。 |
 | 长度/批量 | 100epochs、8卡×16、accum1 | 相同；默认JSON为154900 updates，LeRobot为155600；保留按实际loader长度修正scheduler。 |
 | 优化器/LR | AdamW、1e-4、warmup0、minratio0、weightdecay0 | 当前PPU/H100默认全部对齐；旧benchmark使用3e-5，仅为历史记录。 |
-| 验证/保存 | val500、最多30batches、每50epochs保存，结束保存 | 已对齐；不固定验证噪声、不均匀抽样、不额外初始/最终验证；save_steps=0、max_ckpts=10。 |
+| 验证/保存 | val500、最多30batches、每50epochs保存，结束保存 | 已对齐；不固定验证噪声、不均匀抽样、不额外初始/最终验证；save_steps=0、max_ckpts=10；W&B按用户要求改为默认online，SDK0.22.3支持新格式token。 |
 | 原有加速 | BF16、ZeRO2、SDPA、partial-flow KV复用、冻结模块no_grad | 均保留；官方原来就没有启用compile、gradient checkpointing或通信overlap。PPU实际SDPA是否走厂商fused kernel未测，不把API名当成证据。 |
 | Checkpoint 交付 | model、config、processor、training_args、task stats | 全部导出并独立 reload。增加数据格式/图像尺寸/划分记录、严格模型校验。 |
 | 精确断点状态 | README列state/和training_state.json，但固定源码save_checkpoint没save_state/load_state | 本包同样不支持 optimizer/scheduler/RNG 精确续训；README明确限制。这是上游文档/源码不符，不能当作已复现。已有checkpoint是policy权重，不是完整训练状态。 |

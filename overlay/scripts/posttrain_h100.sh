@@ -37,7 +37,7 @@ MASTER_PORT="${MASTER_PORT:-29521}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUNBUFFERED=1 OMP_NUM_THREADS="${OMP_NUM_THREADS:-1}"
-export WANDB_MODE="${WANDB_MODE:-offline}" WANDB_PROJECT="${WANDB_PROJECT:-trex-posttrain}"
+export WANDB_MODE="${WANDB_MODE:-online}" WANDB_PROJECT="${WANDB_PROJECT:-trex-posttrain}"
 export HF_HOME="${HF_HOME:-$ROOT/.cache/huggingface}"
 export TORCH_EXTENSIONS_DIR="${TORCH_EXTENSIONS_DIR:-$ROOT/.cache/torch_extensions_h100}"
 export DS_BUILD_OPS=0
@@ -75,6 +75,7 @@ if [[ "$MODE" == dry-run ]]; then
     exit 0
 fi
 
+if [[ "$MODE" == train ]]; then source "$ROOT/scripts/wandb_env.sh"; fi
 mkdir -p "$LOG_DIR" "$OUTPUT_DIR"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/$RUN_NAME.pipeline.log}"
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -121,6 +122,9 @@ PYSPACE
         "$DATA_VENV/bin/python" -m pip freeze > "$LOG_DIR/$RUN_NAME.data-environment.txt"
     fi
 
+    if [[ "$MODE" == train ]]; then
+        "$TRAIN_VENV/bin/python" "$ROOT/scripts/wandb_preflight.py" --output "$LOG_DIR/$RUN_NAME.wandb_preflight.json"
+    fi
     "$TRAIN_VENV/bin/python" - <<'PYGPU'
 import torch, torchvision, transformers, accelerate, deepspeed
 from lerobot.datasets.lerobot_dataset import LeRobotDataset

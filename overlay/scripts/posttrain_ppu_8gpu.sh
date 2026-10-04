@@ -2,6 +2,7 @@
 # Full task posttrain: eight PPU processes, release architecture and real data.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export WANDB_MODE="${WANDB_MODE:-online}"
 source "$ROOT/scripts/env_ppu.sh"
 cd "$ROOT"
 
@@ -103,6 +104,7 @@ if [[ "${DRY_RUN:-0}" == 1 ]]; then
     exit 0
 fi
 
+if [[ "${PREPARE_ONLY:-0}" != 1 ]]; then source "$ROOT/scripts/wandb_env.sh"; fi
 if (( NUM_MACHINES > 1 )); then
     LOG_FILE="${LOG_FILE:-$LOG_DIR/$RUN_NAME.rank$MACHINE_RANK.log}"
 else
@@ -112,6 +114,9 @@ mkdir -p "$(dirname "$LOG_FILE")"
 run_training() {
     print_config
     printf 'Console log: %s\n' "$LOG_FILE"
+    if [[ "${PREPARE_ONLY:-0}" != 1 ]]; then
+        python "$ROOT/scripts/wandb_preflight.py" --output "$LOG_DIR/$RUN_NAME.rank$MACHINE_RANK.wandb_preflight.json" || return $?
+    fi
     if [[ "$DATA_FORMAT" == json ]]; then
         TREX_IMAGE_PYTHON="$(command -v python)" LEROBOT_ROOT="$LEROBOT_ROOT" IMAGE_ROOT="$IMAGE_ROOT" \
             PROCESSOR_PATH="$PROCESSOR_PATH" bash "$ROOT/scripts/prepare_json_images.sh" || return $?

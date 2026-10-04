@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "mode": "online",
+  "sdk_version": "0.22.3",
+  "username": "z9054244",
+  "entity": "z9054244-southern-university-of-science-technology",
+  "project": "trex-posttrain",
+  "smoke_run_url": "https://wandb.ai/z9054244-southern-university-of-science-technology/trex-posttrain/runs/nm14t70p",
+  "smoke_run_path": "z9054244-southern-university-of-science-technology/trex-posttrain/nm14t70p",
+  "metric_readback": "PASS"
+}

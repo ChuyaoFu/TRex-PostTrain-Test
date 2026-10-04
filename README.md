@@ -8,6 +8,14 @@
 
 ## 一条命令启动完整流程
 
+训练默认开启 W&B 在线监控，项目为 `trex-posttrain`，空间默认使用 token 所属账号的默认空间。首次在每台训练机器上配置凭据（隐藏输入，保存在仓库外，权限0600）：
+
+```bash
+python3 overlay/scripts/configure_wandb.py
+```
+
+这一步在 clone 本仓库后执行，再运行下面的训练入口。token 不包含在 GitHub、压缩包或训练参数中；也可通过 `WANDB_API_KEY` 环境变量或 `WANDB_API_KEY_FILE` 指向私密文件。默认文件是 `~/.config/trex/wandb_api_key`。仅复制仓库不会复制凭据。
+
 先在 H100 服务器的本地 SSD 目录 clone 本仓库，然后执行：
 
 ```bash
@@ -29,6 +37,31 @@ TREX_WORKDIR=/your/local_ssd/T-Rex_h100 bash run_h100.sh train
 
 脚本在前台运行，Ctrl+C 可中断；安装、下载、转换、验证和训练的 stdout/stderr 都写到 `T-Rex_h100/logs/<RUN_NAME>.pipeline.log`。
 训练指标另外记录在 `outputs/tong_transfer_h100/<RUN_NAME>/metrics.jsonl`。
+
+W&B 记录训练总loss、action/tactile/FLARE loss、学习率、梯度范数、峰值显存及验证action/tactile loss，横轴统一为optimizer_step。启动日志打印run链接，并写入该run输出目录的 `wandb_run.json`。`WANDB_PROJECT` 和 `WANDB_ENTITY` 可指定项目和空间，例如：
+
+```bash
+WANDB_PROJECT=trex-posttrain WANDB_ENTITY=your-team bash run_h100.sh train
+```
+
+在线认证/网络预检失败会在训练前退出；不会静默切换离线。需要主动离线时设置 `WANDB_MODE=offline`。`prepare` 和 `dry-run` 不要求凭据，也不创建W&B run。运行中断网时SDK可能延迟同步，本地metrics.jsonl仍保留。
+
+W&B SDK固定为0.22.3以支持新格式token；其余训练依赖锁定值保留。已有PPU环境只升级这个包（现有依赖已检查兼容）：
+
+```bash
+source scripts/env_ppu.sh
+python -m pip install --no-deps wandb==0.22.3
+```
+
+完整训练前可在已准备的源码/训练环境内单独检查监控，不加载模型：
+
+```bash
+export WANDB_MODE=online
+source scripts/wandb_env.sh
+python scripts/wandb_preflight.py --smoke
+```
+
+它创建一个标记为monitoring-check的小型run，并确认上传指标能从W&B回读；不会启动模型训练或机器人。
 建议始终设置固定 `TREX_WORKDIR`，重复执行可复用环境、HF 下载和完成的数据转换。
 失败会返回非零退出码，tee 不会隐藏训练失败。
 

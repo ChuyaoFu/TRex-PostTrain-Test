@@ -48,5 +48,16 @@
     "min_free_gib": 140,
     "source": "canonical EEF62 LeRobot, unchanged task normalization",
     "ppu_default": "/tmp/trex_tong_transfer_json_20260820"
+  },
+  "monitoring": {
+    "default_mode": "online",
+    "project": "trex-posttrain",
+    "entity": "WANDB_ENTITY or authenticated account default",
+    "sdk_version": "0.22.3",
+    "credential_source": "WANDB_API_KEY or WANDB_API_KEY_FILE (default ~/.config/trex/wandb_api_key)",
+    "credential_in_bundle": false,
+    "preflight": true,
+    "run_metadata_file": "wandb_run.json",
+    "metric_step": "optimizer_step"
   }
 }

@@ -36,3 +36,9 @@
 PPU/H100与交付overlay同步改为官方LR1e-4、warmup0、minratio0；JSON按帧划分5%，val500/30batches，无固定噪声或额外初始/最终验证；每50epochs及结束保存，save_steps0、max_ckpts10。旧120步、PNG/视频benchmark和上文episode划分结果保留为历史验证，不代表当前默认配方。新默认JSON计划154900updates，LeRobot可选路径155600updates。此次不启动完整训练。
 
 当前配方已通过四个入口（主目录及overlay的PPU/H100）dry-run及真实argparse检查；执行实际JSON划分函数检查全量帧覆盖与无交集，198152/10429；执行实际保存条件确认仅epoch49/99保存，并检查不重置验证随机种子的分支。详见RECIPE_VALIDATION.json。未启动GPU训练。
+
+## W&B在线监控更新
+
+PPU/H100默认online，凭据从仓库外私密文件或环境读取；认证/网络预检在训练前执行。项目/空间可通过WANDB_PROJECT/WANDB_ENTITY设置。SDK仅升级到0.22.3，其余H100锁定版本保留；PPU实机使用--no-deps仅升级W&B包，10项依赖兼容检查和真实训练模块导入通过。
+
+训练和验证指标以optimizer_step为显式横轴，避免同一个W&B内部step提交两次造成指标丢失。5项自动检查覆盖凭据读取、环境优先级、缺少凭据阻止online、显式offline，以及同一optimizer_step训练/验证均被记录。真实W&B小型run完成指标上传和回读，无模型训练、无机器人操作；结果见WANDB_VALIDATION.json。H100完整训练仍未执行。

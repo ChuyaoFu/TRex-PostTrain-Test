@@ -295,7 +295,7 @@ urllib3==2.8.0
     # via
     #   requests
     #   sentry-sdk
-wandb==0.18.3
+wandb==0.22.3
     # via -r artifacts/trex_h100_handoff_20261004/overlay/requirements-h100.txt
 xxhash==4.0.1
     # via datasets

@@ -769,11 +769,19 @@ def train(args):
     set_seed(args.seed)
 
     if accelerator.is_main_process:
-        wandb.init(project=args.experiment_name,
+        wandb_run = wandb.init(project=os.environ.get("WANDB_PROJECT") or args.experiment_name,
+                   entity=os.environ.get("WANDB_ENTITY") or None,
                    name=args.run_name,
                    config=args,
                    dir=args.log_dir
                 )
+        wandb.define_metric("optimizer_step")
+        wandb.define_metric("*", step_metric="optimizer_step")
+        with open(os.path.join(args.output_dir, "wandb_run.json"), "w") as handle:
+            json.dump({"id": wandb_run.id, "url": wandb_run.url,
+                       "project": wandb_run.project, "entity": wandb_run.entity,
+                       "mode": os.environ.get("WANDB_MODE", "online")}, handle, indent=2)
+        accelerator.print(f"W&B run: {wandb_run.url or 'offline/disabled'}")
 
     accelerator.state.deepspeed_plugin.deepspeed_config["train_micro_batch_size_per_gpu"] = args.train_bsz_per_gpu
     accelerator.state.deepspeed_plugin.deepspeed_config["train_batch_size"] = (args.train_bsz_per_gpu * dist.get_world_size() * accelerator.gradient_accumulation_steps)
@@ -1030,7 +1038,7 @@ def train(args):
         record({'kind': 'validation', 'optimizer_step': step, **result})
         accelerator.print(f'[Validation {step}] {result}')
         if accelerator.is_main_process:
-            wandb.log(result, step=step)
+            wandb.log({"optimizer_step": step, **result})
     T_per_frame = args.n_flare_tokens_per_frame
     S_steps = args.n_flare_steps
     K = T_per_frame * S_steps  # total flare tokens
@@ -1317,7 +1325,7 @@ def train(args):
                         log_dict['grad_norm'] = float(grad_norm)
                         if not math.isfinite(log_dict['grad_norm']):
                             raise FloatingPointError('Non-finite gradient norm')
-                    wandb.log(log_dict, step=optimizer_steps)
+                    wandb.log({"optimizer_step": optimizer_steps, **log_dict})
                     record({'kind': 'train', 'optimizer_step': optimizer_steps, **log_dict})
 
             if (global_step + 1) % accelerator.gradient_accumulation_steps == 0:
