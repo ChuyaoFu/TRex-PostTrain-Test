@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One foreground workflow: isolated environments -> HF -> official FK -> 8 H100.
+# One foreground workflow: environments -> HF -> official FK -> JSON/PNG -> 8 H100.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -9,6 +9,13 @@ TRAIN_VENV="${TRAIN_VENV:-$ROOT/.venvs/h100}"
 DATA_VENV="${DATA_VENV:-$ROOT/.venvs/data}"
 RAW_ROOT="${RAW_ROOT:-$ROOT/data/trex_gateway_tong_transfer_sf_norawtac_20260820}"
 LEROBOT_ROOT="${LEROBOT_ROOT:-$ROOT/training_data/tong_transfer_eef62}"
+DATA_FORMAT="${DATA_FORMAT:-json}"
+IMAGE_ROOT="${IMAGE_ROOT:-$ROOT/training_data/tong_transfer_json}"
+case "$DATA_FORMAT" in
+    json) data_args=(--data_format json --data_path "$IMAGE_ROOT/task.json" --val_split_by_episode 1) ;;
+    lerobot) data_args=(--data_format lerobot --lerobot_root "$LEROBOT_ROOT") ;;
+    *) echo 'DATA_FORMAT must be json or lerobot'; exit 2 ;;
+esac
 WEIGHTS_ROOT="${WEIGHTS_ROOT:-$ROOT/weights}"
 OUTPUT_DIR="${OUTPUT_DIR:-$ROOT/outputs}"
 LOG_DIR="${LOG_DIR:-$ROOT/logs}"
@@ -45,7 +52,7 @@ cmd=("$TRAIN_VENV/bin/python" -m accelerate.commands.launch
     --model_path "$WEIGHTS_ROOT/Qwen3-VL-2B-Instruct"
     --processor_path "$WEIGHTS_ROOT/T-Rex_midtrain_epoch6/processor"
     --resume_checkpoint "$WEIGHTS_ROOT/T-Rex_midtrain_epoch6" --resume_source midtrain --strict_resume 1
-    --data_format lerobot --lerobot_root "$LEROBOT_ROOT"
+    "${data_args[@]}"
     --n_epochs "$N_EPOCHS" --max_train_steps "$MAX_TRAIN_STEPS"
     --save_freq 50 --save_steps "$SAVE_STEPS" --max_ckpts "$MAX_CKPTS" --skip_checkpoint_save 0
     --action_dim 62 --action_chunk 16 --train_bsz_per_gpu "$TRAIN_BSZ"
@@ -83,7 +90,7 @@ mkdir -p "$(dirname "$LOG_FILE")"
     nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
     if [[ "${SKIP_SETUP:-0}" != 1 ]]; then
         # Check an empty setup has room for environments, inputs and save-time peaks.
-        python3 - "$ROOT" "${MIN_FREE_GIB:-80}" <<'PYSPACE'
+        python3 - "$ROOT" "${MIN_FREE_GIB:-200}" <<'PYSPACE'
 import shutil, sys
 free = shutil.disk_usage(sys.argv[1]).free / 2**30
 if free < float(sys.argv[2]):
@@ -156,6 +163,10 @@ PYDATA
     "$TRAIN_VENV/bin/python" "$ROOT/scripts/check_task_data.py" "$LEROBOT_ROOT"
     "$DATA_VENV/bin/python" "$ROOT/scripts/verify_joint_conversion.py" "$LEROBOT_ROOT"
     "$TRAIN_VENV/bin/python" "$ROOT/scripts/smoke_task_loader.py" "$LEROBOT_ROOT"
+    if [[ "$DATA_FORMAT" == json ]]; then
+        TREX_IMAGE_PYTHON="$TRAIN_VENV/bin/python" LEROBOT_ROOT="$LEROBOT_ROOT" IMAGE_ROOT="$IMAGE_ROOT" \
+            PROCESSOR_PATH="$WEIGHTS_ROOT/T-Rex_midtrain_epoch6/processor" bash "$ROOT/scripts/prepare_json_images.sh"
+    fi
     if [[ "$MODE" == prepare ]]; then echo 'Preparation PASS. Run the same command with train to launch.'; exit 0; fi
     "$TRAIN_VENV/bin/python" - "$OUTPUT_DIR" <<'PYOUTPUT'
 import shutil, sys
@@ -179,6 +190,7 @@ PYFINAL
     )"
     "$TRAIN_VENV/bin/python" "$ROOT/scripts/verify_posttrain_checkpoint.py" \
         --release "$WEIGHTS_ROOT/T-Rex_midtrain_epoch6/model.pt" --checkpoint "$FINAL_POLICY"
+    INFERENCE_PYTHON="$TRAIN_VENV/bin/python" bash "$ROOT/scripts/serve_policy.sh" "$FINAL_POLICY" --smoke_only 1
     printf '%s\n' "$FINAL_POLICY" > "$OUTPUT_DIR/$EXPERIMENT_NAME/$RUN_NAME/latest_policy.txt"
     echo "Verified policy for deployment: $FINAL_POLICY"
     echo "Training completed: $(date -Iseconds)"

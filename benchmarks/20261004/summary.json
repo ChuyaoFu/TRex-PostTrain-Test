@@ -1,0 +1,397 @@
+{
+  "prepared": {
+    "frames": 2844,
+    "episodes": 2,
+    "png_count": 36972,
+    "png_bytes": 1506271822,
+    "json_bytes": 68113186,
+    "extract_seconds": 53.31846643704921,
+    "views": [
+      {
+        "key": "observation.images.head",
+        "count": 2844,
+        "bytes": 271070310
+      },
+      {
+        "key": "observation.images.wrist_right",
+        "count": 2844,
+        "bytes": 639709028
+      },
+      {
+        "key": "observation.images.wrist_left",
+        "count": 2844,
+        "bytes": 569646058
+      },
+      {
+        "key": "observation.tactile_deform.l0",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.l1",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.l2",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.l3",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.l4",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.r0",
+        "count": 2844,
+        "bytes": 7544090
+      },
+      {
+        "key": "observation.tactile_deform.r1",
+        "count": 2844,
+        "bytes": 6304309
+      },
+      {
+        "key": "observation.tactile_deform.r2",
+        "count": 2844,
+        "bytes": 5368663
+      },
+      {
+        "key": "observation.tactile_deform.r3",
+        "count": 2844,
+        "bytes": 947052
+      },
+      {
+        "key": "observation.tactile_deform.r4",
+        "count": 2844,
+        "bytes": 947052
+      }
+    ],
+    "normalization": "identical full-task stats",
+    "video_paths": "identical file bytes on shared and local storage",
+    "png_source": "lossless decoded-video pixels; head crop, grayscale channel0 deform",
+    "json_encoding": "JSONL accepted by official SftDataset; frame content unchanged"
+  },
+  "parity": {
+    "paired_batch_equivalence": "PASS",
+    "samples": 12,
+    "indices": [
+      0,
+      1,
+      100,
+      500,
+      1300,
+      1336,
+      1337,
+      1338,
+      1500,
+      2000,
+      2800,
+      2843
+    ],
+    "tensors": {
+      "input_ids": {
+        "shape": [
+          12,
+          421
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "attention_mask": {
+        "shape": [
+          12,
+          421
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "pixel_values": {
+        "shape": [
+          15552,
+          1536
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "image_grid_thw": {
+        "shape": [
+          36,
+          3
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "noisy_actions": {
+        "shape": [
+          12,
+          16,
+          62
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "target": {
+        "shape": [
+          12,
+          16,
+          62
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "timesteps": {
+        "shape": [
+          12
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "norm_actions": {
+        "shape": [
+          12,
+          16,
+          62
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "tactile_f6s": {
+        "shape": [
+          12,
+          10,
+          6
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "tactile_deforms": {
+        "shape": [
+          12,
+          10,
+          1,
+          240,
+          240
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "tactile_f6s_delayed": {
+        "shape": [
+          12,
+          10,
+          6
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "tactile_deforms_delayed": {
+        "shape": [
+          12,
+          10,
+          1,
+          240,
+          240
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "tactile_f6_history": {
+        "shape": [
+          12,
+          16,
+          10,
+          6
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "time_r": {
+        "shape": [
+          12
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "eps_r": {
+        "shape": [
+          12,
+          16,
+          62
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "flare_pixel_values": {
+        "shape": [
+          41472,
+          1536
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      },
+      "flare_grid_thw": {
+        "shape": [
+          96,
+          3
+        ],
+        "max_abs_diff": 0.0,
+        "exact": true
+      }
+    }
+  },
+  "loader": [
+    {
+      "format": "video_shared",
+      "workers": 2,
+      "batches": 16,
+      "mean_s_per_batch": 5.290117644006386,
+      "samples_per_second": 3.024507407340502,
+      "repeat_means_s": [
+        5.276096685760422,
+        5.304138602252351
+      ]
+    },
+    {
+      "format": "video_local",
+      "workers": 2,
+      "batches": 16,
+      "mean_s_per_batch": 5.229387938321452,
+      "samples_per_second": 3.059631488180573,
+      "repeat_means_s": [
+        5.198355013533728,
+        5.260420863109175
+      ]
+    },
+    {
+      "format": "json_png_local",
+      "workers": 2,
+      "batches": 16,
+      "mean_s_per_batch": 0.9242794932215475,
+      "samples_per_second": 17.31078111906659,
+      "repeat_means_s": [
+        0.9269089403096586,
+        0.9216500461334363
+      ]
+    },
+    {
+      "format": "video_shared",
+      "workers": 4,
+      "batches": 16,
+      "mean_s_per_batch": 2.6581741208356107,
+      "samples_per_second": 6.019169276604919,
+      "repeat_means_s": [
+        2.631476855603978,
+        2.6848713860672433
+      ]
+    },
+    {
+      "format": "video_local",
+      "workers": 4,
+      "batches": 16,
+      "mean_s_per_batch": 2.654378739040112,
+      "samples_per_second": 6.0277758274186555,
+      "repeat_means_s": [
+        2.6571483539883047,
+        2.6516091240919195
+      ]
+    },
+    {
+      "format": "json_png_local",
+      "workers": 4,
+      "batches": 16,
+      "mean_s_per_batch": 0.46212379485950805,
+      "samples_per_second": 34.622757317363885,
+      "repeat_means_s": [
+        0.4631637661368586,
+        0.4610838235821575
+      ]
+    }
+  ],
+  "training": [
+    {
+      "format": "video_shared",
+      "updates": 20,
+      "stable_updates": [
+        5,
+        19
+      ],
+      "rank0_mean_iterator_wait_and_transfer_s": 1.6198578054706256,
+      "rank0_mean_training_body_s": 3.5746959439789254,
+      "rank0_mean_profile_total_s": 5.194553749449551,
+      "stable_mean_s_per_update_from_metrics": 5.194620374077931,
+      "first_loss": 1.6565816402435303,
+      "last_loss": 0.2909083068370819,
+      "peak_allocated_gib": 64.51091432571411,
+      "peak_reserved_gib": 89.755859375,
+      "complete": true
+    },
+    {
+      "format": "video_local",
+      "updates": 20,
+      "stable_updates": [
+        5,
+        19
+      ],
+      "rank0_mean_iterator_wait_and_transfer_s": 1.5474774667993187,
+      "rank0_mean_training_body_s": 3.5802881400256106,
+      "rank0_mean_profile_total_s": 5.127765606824929,
+      "stable_mean_s_per_update_from_metrics": 5.127841644330571,
+      "first_loss": 1.6565816402435303,
+      "last_loss": 0.29215651750564575,
+      "peak_allocated_gib": 64.51091432571411,
+      "peak_reserved_gib": 89.755859375,
+      "complete": true
+    },
+    {
+      "format": "json_png_local",
+      "updates": 20,
+      "stable_updates": [
+        5,
+        19
+      ],
+      "rank0_mean_iterator_wait_and_transfer_s": 0.013522309809923172,
+      "rank0_mean_training_body_s": 3.6051891395201285,
+      "rank0_mean_profile_total_s": 3.6187114493300516,
+      "stable_mean_s_per_update_from_metrics": 3.6187866573377203,
+      "first_loss": 1.6565816402435303,
+      "last_loss": 0.29121696949005127,
+      "peak_allocated_gib": 64.51294660568237,
+      "peak_reserved_gib": 89.755859375,
+      "complete": true
+    }
+  ],
+  "paired_loss_max_abs_diff": {
+    "video_shared": {
+      "total_loss": 0.0028834640979766846,
+      "action_loss": 0.0017485842108726501,
+      "tactile_loss": 0.002367556095123291,
+      "flare_loss": 0.000152587890625
+    },
+    "video_local": {
+      "total_loss": 0.005716264247894287,
+      "action_loss": 0.0028512924909591675,
+      "tactile_loss": 0.004601538181304932,
+      "flare_loss": 0.0001068115234375
+    }
+  },
+  "full_task_estimate": {
+    "frames": 208581,
+    "png_files": 2711553,
+    "png_bytes": 110471055873.62236,
+    "json_bytes": 4995469918.799578
+  },
+  "limits": [
+    "Two PPU devices, not eight PPU or H100.",
+    "Warm filesystem cache.",
+    "Two episodes; PNG and JSON sizes for full task are extrapolated.",
+    "Training timings use 15 stable updates per case; symmetric CUDA synchronization.",
+    "Iterator timing includes Accelerate prefetch and transfer; training body includes communication."
+  ]
+}

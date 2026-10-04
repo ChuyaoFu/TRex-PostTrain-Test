@@ -239,11 +239,29 @@ class SftDataset(Dataset):
         """Split the dataset into train/val. Returns a new SftDataset for val."""
         import copy
         n = len(self.hf_dataset)
-        n_val = max(1, int(n * val_ratio))
         rng = np.random.RandomState(seed)
-        perm = rng.permutation(n)
-        val_indices = sorted(perm[:n_val].tolist())
-        train_indices = sorted(perm[n_val:].tolist())
+        if getattr(self.config, 'val_split_by_episode', 0):
+            paths = self.hf_dataset.select_columns(['input_image_slow']).to_dict()['input_image_slow']
+            frame_re = re.compile(r"/episode_(\d+)/image\d+_")
+            episode_ids = []
+            for sample_paths in paths:
+                match = frame_re.search(sample_paths[0])
+                if not match:
+                    raise ValueError('Episode split requires episode_N/imageN_ image paths.')
+                episode_ids.append(int(match.group(1)))
+            available = sorted(set(episode_ids))
+            if len(available) < 2 or not 0 < val_ratio < 1:
+                raise ValueError('Episode validation requires >=2 episodes and 0<val_ratio<1.')
+            n_val = min(len(available)-1, max(1,int(len(available)*val_ratio)))
+            val_episodes = set(rng.permutation(available)[:n_val].tolist())
+            val_indices = [i for i,ep in enumerate(episode_ids) if ep in val_episodes]
+            train_indices = [i for i,ep in enumerate(episode_ids) if ep not in val_episodes]
+            self.accelerator.print(f'JSON episode split: {len(available)-n_val} train / {n_val} val episodes')
+        else:
+            n_val = max(1, int(n * val_ratio))
+            perm = rng.permutation(n)
+            val_indices = sorted(perm[:n_val].tolist())
+            train_indices = sorted(perm[n_val:].tolist())
 
         val_ds = copy.copy(self)
         val_ds.hf_dataset = self.hf_dataset.select(val_indices)
@@ -526,6 +544,10 @@ def save_checkpoint(model, processor, accelerator, args, epoch, global_step, sta
                 "cascaded_total_steps": getattr(args, "cascaded_total_steps", 10),
                 "cascaded_split_step":  getattr(args, "cascaded_split_step", 6),
                 "flare_frame_stride": getattr(args, "flare_frame_stride", 2),
+                "image_size": args.image_size,
+                "data_format": args.data_format,
+                "val_split_by_episode": args.val_split_by_episode,
+                "checkpoint_training_state": False,
             }, f, indent=2)
 
         with open(os.path.join(save_dir, "stats_data.json"), "w") as f:
@@ -929,11 +951,11 @@ def train(args):
         collate_fn=dataset.collate_fn, num_workers=args.num_workers, pin_memory=True,
     )
 
-    num_training_steps = (
-        int(len(dataloader) * args.n_epochs)
-        // accelerator.gradient_accumulation_steps
-        // dist.get_world_size()
-    )
+    # Accelerate pads the per-rank loader to ceil(raw_batches / world_size).
+    # Set the schedule from actual updates, rather than truncating before padding.
+    sharded_batches_per_epoch = math.ceil(len(dataloader) / dist.get_world_size())
+    num_training_steps = (sharded_batches_per_epoch * args.n_epochs
+                          // accelerator.gradient_accumulation_steps)
     if args.max_train_steps > 0:
         num_training_steps = min(num_training_steps, args.max_train_steps)
     lr_scheduler = get_cosine_schedule_with_warmup(
@@ -974,6 +996,20 @@ def train(args):
             payload['elapsed_seconds'] = time.monotonic() - started_at
             with open(os.path.join(args.output_dir, 'metrics.jsonl'), 'a') as handle:
                 handle.write(json.dumps(payload, allow_nan=False) + '\n')
+    if len(dataloader) != sharded_batches_per_epoch:
+        raise RuntimeError('Prepared loader length differs from the planned LR schedule.')
+    if accelerator.is_main_process:
+        run_config = {'arguments': vars(args), 'processes': accelerator.num_processes,
+                      'global_batch': args.train_bsz_per_gpu * accelerator.num_processes * accelerator.gradient_accumulation_steps,
+                      'train_frames':len(dataset), 'validation_frames':len(val_dataset) if val_dataloader is not None else 0,
+                      'microbatches_per_epoch_per_rank':len(dataloader),
+                      'planned_optimizer_updates':num_training_steps}
+        with open(os.path.join(args.output_dir, 'run_config.json'), 'w') as handle:
+            json.dump(run_config, handle, indent=2)
+        accelerator.print(f'[Training plan] {num_training_steps} optimizer updates; {len(dataloader)} batches/epoch/rank')
+        record({'kind':'configuration', 'planned_optimizer_updates':num_training_steps,
+                'batches_per_epoch_per_rank':len(dataloader), 'data_format':args.data_format,
+                'validation_split':'episode' if args.data_format == 'lerobot' or args.val_split_by_episode else 'frame'})
     def evaluate(step):
         import random
         py_state, np_state = random.getstate(), np.random.get_state()
@@ -1409,6 +1445,8 @@ if __name__ == "__main__":
 
     # Validation
     parser.add_argument("--val_ratio", type=float, default=0.0, help="Fraction of samples for validation (0=disable)")
+    parser.add_argument('--val_split_by_episode', type=int, default=0,
+                        help='JSON: hold out whole episodes like LeRobot; default 0 preserves upstream frame split.')
     parser.add_argument("--val_freq", type=int, default=0, help="Run validation every N steps (0=disable)")
     parser.add_argument("--max_val_batches", type=int, default=50, help="Max batches per validation run")
 

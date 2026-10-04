@@ -1,0 +1,168 @@
+{
+  "paired_batch_equivalence": "PASS",
+  "samples": 12,
+  "indices": [
+    0,
+    1,
+    100,
+    500,
+    1300,
+    1336,
+    1337,
+    1338,
+    1500,
+    2000,
+    2800,
+    2843
+  ],
+  "tensors": {
+    "input_ids": {
+      "shape": [
+        12,
+        421
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "attention_mask": {
+      "shape": [
+        12,
+        421
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "pixel_values": {
+      "shape": [
+        15552,
+        1536
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "image_grid_thw": {
+      "shape": [
+        36,
+        3
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "noisy_actions": {
+      "shape": [
+        12,
+        16,
+        62
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "target": {
+      "shape": [
+        12,
+        16,
+        62
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "timesteps": {
+      "shape": [
+        12
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "norm_actions": {
+      "shape": [
+        12,
+        16,
+        62
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "tactile_f6s": {
+      "shape": [
+        12,
+        10,
+        6
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "tactile_deforms": {
+      "shape": [
+        12,
+        10,
+        1,
+        240,
+        240
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "tactile_f6s_delayed": {
+      "shape": [
+        12,
+        10,
+        6
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "tactile_deforms_delayed": {
+      "shape": [
+        12,
+        10,
+        1,
+        240,
+        240
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "tactile_f6_history": {
+      "shape": [
+        12,
+        16,
+        10,
+        6
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "time_r": {
+      "shape": [
+        12
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "eps_r": {
+      "shape": [
+        12,
+        16,
+        62
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "flare_pixel_values": {
+      "shape": [
+        41472,
+        1536
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    },
+    "flare_grid_thw": {
+      "shape": [
+        96,
+        3
+      ],
+      "max_abs_diff": 0.0,
+      "exact": true
+    }
+  }
+}

@@ -19,7 +19,22 @@
     "validation_ratio": 0.05,
     "expected_updates": 155600,
     "precision": "BF16 except frozen VQ-VAE and MSE FP32",
-    "zero_stage": 2
+    "zero_stage": 2,
+    "data_format": "json",
+    "validation_split": "episode",
+    "image_workers": 4,
+    "training_workers": 4,
+    "json_image_preprocessing": true,
+    "inference_smoke": true,
+    "checkpoint_training_state": false
   },
-  "h100_execution_verified": false
+  "h100_execution_verified": false,
+  "image_cache": {
+    "format": "PNG + JSONL",
+    "estimated_png_bytes": 110471055874,
+    "png_files": 2711553,
+    "min_free_gib": 140,
+    "source": "canonical EEF62 LeRobot, unchanged task normalization",
+    "ppu_default": "/tmp/trex_tong_transfer_json_20260820"
+  }
 }

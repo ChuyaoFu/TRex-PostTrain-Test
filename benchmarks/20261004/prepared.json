@@ -1,0 +1,79 @@
+{
+  "frames": 2844,
+  "episodes": 2,
+  "png_count": 36972,
+  "png_bytes": 1506271822,
+  "json_bytes": 68113186,
+  "extract_seconds": 53.31846643704921,
+  "views": [
+    {
+      "key": "observation.images.head",
+      "count": 2844,
+      "bytes": 271070310
+    },
+    {
+      "key": "observation.images.wrist_right",
+      "count": 2844,
+      "bytes": 639709028
+    },
+    {
+      "key": "observation.images.wrist_left",
+      "count": 2844,
+      "bytes": 569646058
+    },
+    {
+      "key": "observation.tactile_deform.l0",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.l1",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.l2",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.l3",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.l4",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.r0",
+      "count": 2844,
+      "bytes": 7544090
+    },
+    {
+      "key": "observation.tactile_deform.r1",
+      "count": 2844,
+      "bytes": 6304309
+    },
+    {
+      "key": "observation.tactile_deform.r2",
+      "count": 2844,
+      "bytes": 5368663
+    },
+    {
+      "key": "observation.tactile_deform.r3",
+      "count": 2844,
+      "bytes": 947052
+    },
+    {
+      "key": "observation.tactile_deform.r4",
+      "count": 2844,
+      "bytes": 947052
+    }
+  ],
+  "normalization": "identical full-task stats",
+  "video_paths": "identical file bytes on shared and local storage",
+  "png_source": "lossless decoded-video pixels; head crop, grayscale channel0 deform",
+  "json_encoding": "JSONL accepted by official SftDataset; frame content unchanged"
+}

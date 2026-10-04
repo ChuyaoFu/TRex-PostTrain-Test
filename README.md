@@ -2,9 +2,9 @@
 
 这个仓库是用于交接 task posttrain 的小型启动包。目标服务器配置：NVIDIA driver **580.95.05**、系统 CUDA **12.8**、**8 × H100**。
 
-数据、公开权重和官方源码由训练服务器自动下载，无需从 PPU 服务器拷贝。仓库包含可直接运行的入口及 overlay；原始约 50 KB 的压缩交付包也保存在 [`dist/trex_h100_handoff_20261004.tar.gz`](dist/trex_h100_handoff_20261004.tar.gz)。
+数据、公开权重和官方源码由训练服务器自动下载，无需从 PPU 服务器拷贝。仓库包含可直接运行的入口及 overlay；同步更新的压缩交付包也保存在 [`dist/trex_h100_handoff_20261004.tar.gz`](dist/trex_h100_handoff_20261004.tar.gz)。
 机器要求：Linux x86_64（glibc ≥ 2.28）、8 张 H100、已安装的 NVIDIA 驱动、能够访问 GitHub / PyPI / Hugging Face；命令 git、curl、python3、nvidia-smi 可用。
-建议主机内存至少 256 GiB，并在本地 SSD 上留至少 80–100 GiB。脚本不安装或更换驱动和系统 CUDA，也不需要 root。
+建议主机内存至少 256 GiB，本地 SSD 空闲至少 200 GiB（建议 250 GiB）。默认现在离线提取 PNG，预计约 110 GB 图片、5 GB JSON、271 万个文件，再加公开输入、环境和 checkpoint。脚本不安装或更换驱动和系统 CUDA，也不需要 root。
 
 ## 一条命令启动完整流程
 
@@ -16,7 +16,7 @@ cd TRex-PostTrain-Test
 bash run_h100.sh train
 ```
 
-这会在当前仓库下创建 `T-Rex_h100/` 工作目录。入口会依次安装环境、下载数据和权重、转换/校验数据，再启动 8 卡训练。
+这会在当前仓库下创建 `T-Rex_h100/` 工作目录。入口依次安装环境、下载数据和权重、官方 FK 转换、离线视频解帧为 PNG＋JSON、配对校验，再启动 8 卡训练。
 需要把工作目录放到其他磁盘时，指定一个新的绝对路径：
 
 ```bash
@@ -52,7 +52,8 @@ SKIP_SETUP=1 SKIP_DOWNLOAD=1 RUN_NAME=h100_full bash run_h100.sh train
 3. 检查 8 张 H100、BF16 matmul、训练模块导入。使用 BF16 + ZeRO-2，无 CPU offload。
 4. HF 下载下面的固定 snapshot，并校验两份大权重 SHA256。可以通过正常 `hf auth login` 提供令牌；不得将令牌放进交付包。
 5. CPU 使用官方 Vega-1 FK，把全部 200 episodes / 208581 frames 的关节 58 维转换成 T-Rex EEF 62 维，生成 16 步动作 chunk 和任务 q01/q99 统计；检查 SE(3)、手部动作、触觉值、episode 边界、真实视频解码及 batch。
-6. 8 卡训练，冻结 encoder 的 BN 统计，保留 VQ-VAE FP32，MSE 用 FP32，训练/验证 loss 有有限值检查；完成后输出 loss 曲线/summary，并验证导出 checkpoint 所有参数有限、冻结权重未变、可训练分支更新。
+6. `utils/export_lerobot_to_json_images.py` 顺序解码每个视频一次，导出官方 JSON loader 使用的无损 PNG＋JSONL＋统计文件。每视频记录完成状态、原子写文件，支持中断重试；完成前训练不启动。真实 release processor 配对验证 17 项张量和 episode 验证划分，动作/触觉/FLARE/归一化完全保留。
+7. 8 卡训练，冻结 encoder 的 BN 统计，保留 VQ-VAE FP32，MSE 用 FP32；保存实际 `run_config.json`。完成后验证 checkpoint、输出曲线和 summary，并自动做离线 slow/fast 推理 smoke，不连接机器人。
 
 LeRobot 0.4.0 使用 `--no-deps` 安装，仅启用此项目实际使用的 dataset loader / PyAV 路径。
 其整个机器人控制、GUI、其他 policy 依赖没有安装，而且其包元数据要求不同版本的 accelerate / wandb / HF Hub。
@@ -80,7 +81,7 @@ huggingface-cli download miniFranka/trex_gateway_tong_transfer_sf_norawtac_20260
 midtrain 的 model.pt 是 8.505 GB，Qwen model.safetensors 是 4.255 GB；两者合计约 12.76 GB（十进制）。
 当前构造函数仍用完整 Qwen 初始化再加载 midtrain，所以保留这一公开下载步骤。
 midtrain 已内嵌 deform encoder 和 VQ-VAE，**无需另外下载/传输这两份 checkpoint**。
-转换后的数值数据约 373 MB；视频用软链接，不复制/重编码。不要删除原始数据或单独移动转换目录。
+FK 转换后的数值数据约 373 MB，视频仍是原始软链接。随后在训练机器本地提取 PNG；无需额外传输图片。JSON 内使用绝对图片路径，缓存不能直接移动到另一台机器；应在目标机器重新生成。保留原始视频及 EEF62 目录以便校验/重试。
 HF 下载可断点复用；`SKIP_DOWNLOAD=1` 只适用于全部输入已经完整存在，并仍会检查权重 hash。
 
 ## 默认训练参数及可覆盖项
@@ -99,8 +100,29 @@ LR=1e-4 WARMUP_RATES=0 MIN_LR_RATIO=0 MAX_VAL_BATCHES=30 \
 
 `TRAIN_BSZ`、`GRAD_ACCUM`、`NUM_WORKERS`、`SAVE_STEPS`、`VAL_FREQ`、`MAX_CKPTS`、`MASTER_PORT`、`RUN_NAME` 均可通过环境变量设置。
 `RAW_ROOT`、`LEROBOT_ROOT`、`WEIGHTS_ROOT`、`OUTPUT_DIR`、`LOG_DIR`、`TRAIN_VENV`、`DATA_VENV` 支持指定绝对路径。
+`DATA_FORMAT=json` 为默认；`DATA_FORMAT=lerobot` 保留旧视频训练路径。`IMAGE_ROOT` 默认工作目录下 `training_data/tong_transfer_json`；`IMAGE_WORKERS=4`，新提取至少需要 `MIN_IMAGE_FREE_GIB=140` GiB 空闲。JSON 默认显式使用 `--val_split_by_episode 1`，保持现有 190/10 episodes 划分。LR schedule 已按 Accelerate 实际 padding 后的更新数计算，100 epochs 对应 155600 updates。
 同一个已有 metrics 的 RUN_NAME 会被拒绝，避免混淆不同训练。
 改变 batch 或数据划分后，update 数会改变；不应通过写死 155600 替代官方 100 epochs。
+
+## 为什么默认离线图片
+
+官方 README 的默认 JSON 路径先离线解视频为 PNG。我们原先选择了官方支持的 LeRobot opt-in 路径；不是官方没有这一步。配对实测见 [`IO_BENCHMARK.md`](IO_BENCHMARK.md)：dev 2 PPU、每卡 bs16、全部 loss 分支开启，原共享盘视频 5.19 s/update，JSON＋本地 PNG 3.62 s/update，训练耗时减少约 30%，吞吐提高约 44%；两组模型计算约 3.6 s，差异主要是等待数据。DataLoader 单独测速快约 5.7 倍，不能把这个倍数直接用于训练 ETA。
+
+这些是 dev 两卡、两条完整 episodes、warm-cache 的结果；8 卡 PPU 和 H100 尚需实测。PNG/JSON 容量按样本外推，提取一次之后可跨全部 100 epochs 复用。
+
+## 已有 PPU 环境的准备与启动
+
+服务器 `/mnt/world_foundational_model/chuyao/T-Rex` 的 PPU 启动脚本也默认使用同一图片流程，复用现有 vendor torch 环境：
+
+```bash
+cd /mnt/world_foundational_model/chuyao/T-Rex
+# 只做提取与校验，不启动 GPU 训练；dev 上已启动这一流程。
+PREPARE_ONLY=1 bash scripts/posttrain_ppu_8gpu.sh
+# 图片完成后，8 PPU 正式训练仍以前台运行并正常 tee 日志。
+RUN_NAME=tong_transfer_ppu_images bash scripts/posttrain_ppu_8gpu.sh
+```
+
+PPU 的 `IMAGE_ROOT` 默认 `/tmp/trex_tong_transfer_json_20260820`，应按需改到有容量的持久本地 SSD。多节点必须每个节点都准备相同绝对路径的本地缓存；dev 的 `/tmp` 不与其他节点共享。`DATA_FORMAT=lerobot` 可继续旧流程。已运行的旧训练不会自动切换数据或被重启。
 
 ## 训练结果交回及部署输入
 
@@ -112,6 +134,15 @@ LR=1e-4 WARMUP_RATES=0 MIN_LR_RATIO=0 MAX_VAL_BATCHES=30 \
 
 机器人按已确认的 Dexmate Vega-1，锁定官方默认 torso `[0.9,1.57,0.1]`、head `[0.28,0,0]`。
 原始数据没有这些关节；FK 得到的是记录 target joints 的末端位姿。如果现场锁定姿态有差异，需要重新生成转换数据和 task 统计。
+
+推理入口使用已修复的双臂 10 路触觉 warm-up，严格校验 checkpoint 并从原始权重恢复 VQ-VAE FP32，避免 BF16 往返损失。进入生成的源码目录、指定已配置的训练/推理 Python 后，可先离线检查再开服务：
+
+```bash
+INFERENCE_PYTHON=/path/to/environment/bin/python bash scripts/serve_policy.sh /path/to/checkpoint --smoke_only 1
+INFERENCE_PYTHON=/path/to/environment/bin/python PORT=5678 bash scripts/serve_policy.sh /path/to/checkpoint
+```
+
+这只验证模型与 slow/fast 协议；现场机器人控制、传感器标定、时序和成功率尚未验证。官方 README 的逐项审查与所有差异见 [`UPSTREAM_README_AUDIT.md`](UPSTREAM_README_AUDIT.md)。
 
 ## 已验证范围
 
